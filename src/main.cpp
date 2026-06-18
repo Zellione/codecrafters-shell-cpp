@@ -6,10 +6,12 @@ int main() {
   std::cout << std::unitbuf;
   std::cerr << std::unitbuf;
 
-  std::cout << "$ ";
+  while (true) {
+    std::cout << "$ ";
 
-  std::string user_input;
-  std::cin >> user_input;
+    std::string user_input;
+    std::cin >> user_input;
 
-  std::cout << user_input << ": command not found" << std::endl;
+    std::cout << user_input << ": command not found" << std::endl;
+  }
 }
