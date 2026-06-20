@@ -4,18 +4,18 @@
 #include <vector>
 
 class BuiltinCommand {
-private:
-  std::string m_name;
-  std::string m_description;
+  private:
+    std::string m_name;
+    std::string m_description;
 
-  virtual void Process(std::vector<std::string> arguments) const {};
+    virtual void Process(std::vector<std::string> arguments) const {};
 
-public:
-  BuiltinCommand(std::string name, std::string description);
+  public:
+    BuiltinCommand(std::string name, std::string description);
 
-  virtual bool IsCommand(std::string command) const;
+    virtual bool IsCommand(std::string command) const;
 
-  std::string GetDescription() const;
+    std::string GetDescription() const;
 
-  virtual void Execute(std::string command) const;
+    virtual void Execute(std::string commandline) const;
 };
