@@ -1,3 +1,9 @@
 {
-    "dependencies": []
+  "dependencies": [
+    {
+      "name": "ncurses",
+      "default-features": false
+    },
+    "readline"
+  ]
 }
