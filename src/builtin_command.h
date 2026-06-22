@@ -1,10 +1,13 @@
 #pragma once
 
+#include "parser/token_parser.h"
 #include <string>
 #include <vector>
 
 class BuiltinCommand {
   private:
+    TokenParser m_parser;
+
     std::string m_name;
     std::string m_description;
 
