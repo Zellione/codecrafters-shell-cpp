@@ -1,15 +1,21 @@
 #pragma once
 
-#include "single_quotes.h"
+#include "specialized_parser.h"
 #include <vector>
+
+struct Node {
+    Node(std::string token, NodeType type) : token(token), type(type) {}
+
+    std::string token;
+    NodeType type;
+};
 
 class TokenParser {
   private:
-    SingleQuotes m_sqQuotes;
+    std::vector<SpecializedParser *> m_Parsers;
 
   public:
     TokenParser();
 
-    std::vector<std::string>
-    GetCommandAndArgs(const std::string &commandline) const;
+    std::vector<Node> GetCommandAndArgs(const std::string &commandline) const;
 };

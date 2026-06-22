@@ -37,8 +37,8 @@ int main() {
             continue;
         }
 
-        bool was_command = exec_external_comm.Exec(user_input);
-        if (was_command)
+        bool external_command = exec_external_comm.Exec(user_input);
+        if (external_command)
             continue;
 
         std::cout << user_input << ": command not found" << std::endl;

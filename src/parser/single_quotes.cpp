@@ -2,11 +2,6 @@
 
 #include <string>
 
-bool SingleQuotes::IsEndOfCommand(const std::string &command,
-                                  size_t pos) const {
-    return pos + 1 == command.length();
-}
-
 bool SingleQuotes::HasAdjacentSingleQuotes(const std::string &command,
                                            size_t start_pos) const {
     size_t pos = start_pos + 1;
@@ -23,7 +18,7 @@ Token SingleQuotes::Parse(const std::string &command, size_t start_pos) const {
     while (pos < command.length()) {
         if (command[pos] == '\'') {
             if (IsEndOfCommand(command, pos))
-                return Token(token, -1);
+                return Token(token, pos);
             if (HasAdjacentSingleQuotes(command, pos))
                 pos += 2;
             else
@@ -33,7 +28,7 @@ Token SingleQuotes::Parse(const std::string &command, size_t start_pos) const {
         size_t next = command.find('\'', pos);
 
         if (next == std::string::npos)
-            return Token(token, pos + 1);
+            return Token(token, pos);
 
         size_t token_length = next - pos;
         token += command.substr(pos, token_length);
@@ -41,11 +36,9 @@ Token SingleQuotes::Parse(const std::string &command, size_t start_pos) const {
         pos = next;
     }
 
-    return Token(token, -1);
+    return Token(token, pos);
 }
 
 bool SingleQuotes::IsActivated(char c) const { return c == '\''; }
 
-bool SingleQuotes::HasSingleQuotes(const std::string &command) const {
-    return command.find('\'') != std::string::npos;
-}
+NodeType SingleQuotes::GetNodeType() const { return NodeType::SINGLE_QUOTES; }

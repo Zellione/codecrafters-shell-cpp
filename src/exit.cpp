@@ -4,4 +4,4 @@
 ExitCommand::ExitCommand()
     : BuiltinCommand("exit", "exit is a shell builtin") {}
 
-void ExitCommand::Process(std::vector<std::string> arguments) const { exit(0); }
+void ExitCommand::Process(std::vector<Node> arguments) const { exit(0); }
