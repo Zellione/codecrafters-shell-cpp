@@ -11,20 +11,20 @@ TokenParser::Parse(const std::string &commandline) const {
     size_t pos = 0;
     while (pos < commandline.length()) {
         state = DetermineState(commandline[pos], state);
-        std::string tmp = "";
+        Token tmp;
         switch (state) {
         case ParserState::INSIDE_SINGLE_QUOTES:
             tmp = ParseInsideSingleQuotes(commandline, pos);
-            buffer += tmp;
-            pos += tmp.length() + 1;
+            buffer += tmp.buffer;
+            pos = tmp.end_pos;
             break;
         case ParserState::INSIDE_DOUBLE_QUOTES:
             tmp = ParseInsideDoubleQuotes(commandline, pos);
-            buffer += tmp;
-            pos += tmp.length() + 1;
+            buffer += tmp.buffer;
+            pos = tmp.end_pos;
             break;
         case ParserState::ON_BACKSLASH:
-            buffer += ParsePreviousBackslash(commandline, pos);
+            buffer += ParsePreviousBackslash(commandline, pos).buffer;
             pos += 1;
             break;
         case ParserState::NORMAL:
@@ -61,33 +61,38 @@ ParserState TokenParser::DetermineState(char c, ParserState current) const {
     return ParserState::NORMAL;
 }
 
-std::string TokenParser::ParseInsideSingleQuotes(const std::string &commandline,
-                                                 size_t pos) const {
+Token TokenParser::ParseInsideSingleQuotes(const std::string &commandline,
+                                           size_t start_pos) const {
     std::string buffer = "";
+    size_t pos = start_pos;
     pos++;
     while (pos < commandline.length() && commandline[pos] != '\'') {
         buffer += commandline[pos];
         pos++;
     }
 
-    return buffer;
+    return Token(start_pos, pos, buffer);
 }
-std::string TokenParser::ParseInsideDoubleQuotes(const std::string &commandline,
-                                                 size_t pos) const {
+Token TokenParser::ParseInsideDoubleQuotes(const std::string &commandline,
+                                           size_t start_pos) const {
     std::string buffer = "";
+    size_t pos = start_pos;
     pos++;
     while (pos < commandline.length() && commandline[pos] != '"') {
+        if (commandline[pos] == '\\') {
+            pos++;
+        }
         buffer += commandline[pos];
         pos++;
     }
 
-    return buffer;
+    return Token(start_pos, pos, buffer);
 }
-std::string TokenParser::ParsePreviousBackslash(const std::string &commandline,
-                                                size_t pos) const {
+Token TokenParser::ParsePreviousBackslash(const std::string &commandline,
+                                          size_t start_pos) const {
     std::string buffer = "";
+    size_t pos = start_pos + 1;
+    buffer += commandline[pos];
 
-    buffer += commandline[pos + 1];
-
-    return buffer;
+    return Token(start_pos, pos, buffer);
 }
