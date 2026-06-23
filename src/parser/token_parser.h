@@ -1,21 +1,27 @@
 #pragma once
 
-#include "specialized_parser.h"
+#include <string>
 #include <vector>
 
-struct Node {
-    Node(std::string token, NodeType type) : token(token), type(type) {}
-
-    std::string token;
-    NodeType type;
+enum class ParserState {
+    NORMAL,
+    INSIDE_SINGLE_QUOTES,
+    INSIDE_DOUBLE_QUOTES,
+    ON_BACKSLASH
 };
 
 class TokenParser {
   private:
-    std::vector<SpecializedParser *> m_Parsers;
+    ParserState DetermineState(char c, ParserState current) const;
+    std::string ParseInsideSingleQuotes(const std::string &commandline,
+                                        size_t pos) const;
+    std::string ParseInsideDoubleQuotes(const std::string &commandline,
+                                        size_t pos) const;
+    std::string ParsePreviousBackslash(const std::string &commandline,
+                                       size_t pos) const;
 
   public:
     TokenParser();
 
-    std::vector<Node> GetCommandAndArgs(const std::string &commandline) const;
+    std::vector<std::string> Parse(const std::string &commandline) const;
 };

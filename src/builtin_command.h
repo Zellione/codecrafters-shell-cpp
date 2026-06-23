@@ -11,7 +11,7 @@ class BuiltinCommand {
     std::string m_name;
     std::string m_description;
 
-    virtual void Process(std::vector<Node> arguments) const {};
+    virtual void Process(std::vector<std::string> arguments) const {};
 
   public:
     BuiltinCommand(std::string name, std::string description);

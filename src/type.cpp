@@ -8,8 +8,8 @@
 TypeCommand::TypeCommand(const BuiltinRegistry *registry)
     : BuiltinCommand("type", "type is a shell builtin"), m_registry(registry) {}
 
-void TypeCommand::Process(std::vector<Node> arguments) const {
-    std::string type_check = arguments.size() > 1 ? arguments[2].token : "";
+void TypeCommand::Process(std::vector<std::string> arguments) const {
+    std::string type_check = arguments.size() > 1 ? arguments[2] : "";
 
     const BuiltinCommand *command = m_registry->FindCommand(type_check);
 

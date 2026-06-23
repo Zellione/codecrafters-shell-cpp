@@ -4,7 +4,7 @@
 
 class ExitCommand : public BuiltinCommand {
   private:
-    virtual void Process(std::vector<Node> arguments) const override;
+    virtual void Process(std::vector<std::string> arguments) const override;
 
   public:
     ExitCommand();

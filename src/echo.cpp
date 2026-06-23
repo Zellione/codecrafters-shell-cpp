@@ -5,10 +5,12 @@
 EchoCommand::EchoCommand()
     : BuiltinCommand("echo", "echo is a shell builtin") {}
 
-void EchoCommand::Process(std::vector<Node> arguments) const {
-    for (int i = 2; i < arguments.size(); i++) {
+void EchoCommand::Process(std::vector<std::string> arguments) const {
+    for (size_t i = 1; i < arguments.size(); i++) {
 
-        std::cout << arguments[i].token;
+        std::cout << arguments[i];
+        if (i < arguments.size() - 1)
+            std::cout << " ";
     }
     std::cout << std::endl;
 }

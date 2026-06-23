@@ -8,7 +8,7 @@ bool BuiltinCommand::IsCommand(std::string command) const {
 }
 
 void BuiltinCommand::Execute(std::string commandline) const {
-    std::vector<Node> arguments = m_parser.GetCommandAndArgs(commandline);
+    std::vector<std::string> arguments = m_parser.Parse(commandline);
 
     Process(arguments);
 }
