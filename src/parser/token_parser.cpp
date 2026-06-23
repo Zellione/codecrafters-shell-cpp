@@ -11,15 +11,17 @@ TokenParser::Parse(const std::string &commandline) const {
     size_t pos = 0;
     while (pos < commandline.length()) {
         state = DetermineState(commandline[pos], state);
+        std::string tmp = "";
         switch (state) {
         case ParserState::INSIDE_SINGLE_QUOTES:
-            buffer += ParseInsideSingleQuotes(commandline, pos);
-            pos += buffer.length() + 1;
+            tmp = ParseInsideSingleQuotes(commandline, pos);
+            buffer += tmp;
+            pos += tmp.length() + 1;
             break;
         case ParserState::INSIDE_DOUBLE_QUOTES:
-            buffer += ParseInsideDoubleQuotes(commandline, pos);
-            pos += buffer.length() + 1;
-
+            tmp = ParseInsideDoubleQuotes(commandline, pos);
+            buffer += tmp;
+            pos += tmp.length() + 1;
             break;
         case ParserState::ON_BACKSLASH:
             buffer += ParsePreviousBackslash(commandline, pos);
