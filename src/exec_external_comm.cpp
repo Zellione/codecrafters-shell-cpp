@@ -3,10 +3,14 @@
 
 #include <cstdio>
 #include <filesystem>
+#include <iomanip>
 #include <iostream>
+#include <sstream>
+
+ExecExternalCommand::ExecExternalCommand() : m_Parser(TokenParser()) {}
 
 bool ExecExternalCommand::Exec(std::string commandline) const {
-    std::vector<std::string> comms_and_args = get_command_and_args(commandline);
+    std::vector<std::string> comms_and_args = m_Parser.Parse(commandline);
     if (comms_and_args.size() == 0)
         return false;
 
@@ -14,14 +18,20 @@ bool ExecExternalCommand::Exec(std::string commandline) const {
     if (exec_path == "")
         return false;
 
-    std::string exec_path_with_args = "";
+    std::stringstream exec_path_with_args;
     for (int i = 0; i < comms_and_args.size(); i++) {
-        exec_path_with_args += comms_and_args[i];
+        if (comms_and_args[i].find(' ') != std::string::npos ||
+            comms_and_args[i].find('\'') != std::string::npos ||
+            comms_and_args[i].find('\\') != std::string::npos) {
+            exec_path_with_args << std::quoted(comms_and_args[i]);
+        } else {
+            exec_path_with_args << comms_and_args[i];
+        }
         if (i != comms_and_args.size() - 1)
-            exec_path_with_args += " ";
+            exec_path_with_args << " ";
     }
 
-    FILE *pipe = popen(exec_path_with_args.c_str(), "r");
+    FILE *pipe = popen(exec_path_with_args.str().c_str(), "r");
     if (!pipe)
         return false;
 

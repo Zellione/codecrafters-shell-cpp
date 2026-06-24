@@ -1,5 +1,7 @@
 #include "helper.h"
 #include <filesystem>
+#include <iomanip>
+#include <sstream>
 #include <unistd.h>
 
 std::filesystem::path find_executable(std::string command) {
@@ -9,9 +11,17 @@ std::filesystem::path find_executable(std::string command) {
     for (const auto &path : validPathFolders) {
 
         std::filesystem::path filepath = path / command;
+        std::stringstream cmd;
+        if (filepath.string().find(' ') != std::string::npos ||
+            filepath.string().find('\'') != std::string::npos ||
+            filepath.string().find('\\') != std::string::npos) {
+            cmd << std::quoted(filepath.string());
+        } else {
+            cmd << filepath.string();
+        }
 
         if (std::filesystem::exists(filepath) && is_executable_file(filepath))
-            return filepath;
+            return cmd.str();
     }
 
     return "";
@@ -47,35 +57,10 @@ std::vector<std::filesystem::path> get_valid_path_folders() {
 }
 
 bool is_executable_file(const std::filesystem::path &filepath) {
-    std::filesystem::path path = std::filesystem::path(filepath);
-    if (!std::filesystem::exists(path) ||
-        !std::filesystem::is_regular_file(path)) {
+    if (!std::filesystem::exists(filepath) ||
+        !std::filesystem::is_regular_file(filepath)) {
         return false;
     }
 
-    return access(path.c_str(), X_OK) == 0;
-}
-
-std::vector<std::string> get_command_and_args(std::string commandline) {
-    std::vector<std::string> comm_and_args;
-
-    size_t pos = 0;
-    while (pos < commandline.length()) {
-        if (commandline[pos] == ' ')
-            pos++;
-
-        size_t next = commandline.find(' ', pos);
-
-        if (next == std::string::npos) {
-            comm_and_args.emplace_back(commandline.substr(pos));
-            break;
-        }
-
-        size_t arg_length = next - pos;
-        comm_and_args.emplace_back(commandline.substr(pos, arg_length));
-
-        pos = next;
-    }
-
-    return comm_and_args;
+    return access(filepath.c_str(), X_OK) == 0;
 }

@@ -7,4 +7,3 @@
 std::filesystem::path find_executable(std::string command);
 std::vector<std::filesystem::path> get_valid_path_folders();
 bool is_executable_file(const std::filesystem::path &path);
-std::vector<std::string> get_command_and_args(std::string commandline);
