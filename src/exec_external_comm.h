@@ -1,13 +1,14 @@
 #pragma once
 
+#include "output/output.h"
 #include "parser/token_parser.h"
-#include <string>
 
 class ExecExternalCommand {
   private:
     TokenParser m_Parser;
+    Output *m_Output;
 
   public:
-    ExecExternalCommand();
-    bool Exec(std::string commandline) const;
+    ExecExternalCommand(Output *output);
+    bool Exec(const std::string &commandline) const;
 };

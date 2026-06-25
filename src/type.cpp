@@ -5,11 +5,12 @@
 #include <iostream>
 #include <unistd.h>
 
-TypeCommand::TypeCommand(const BuiltinRegistry *registry)
-    : BuiltinCommand("type", "type is a shell builtin"), m_registry(registry) {}
+TypeCommand::TypeCommand(const BuiltinRegistry *registry, Output *output)
+    : BuiltinCommand("type", "type is a shell builtin", output),
+      m_registry(registry) {}
 
-void TypeCommand::Process(std::vector<std::string> arguments) const {
-    std::string type_check = arguments.size() > 0 ? arguments[1] : "";
+void TypeCommand::Process(std::vector<Token> tokens) const {
+    std::string type_check = tokens.size() > 0 ? tokens[1].token : "";
 
     const BuiltinCommand *command = m_registry->FindCommand(type_check);
 

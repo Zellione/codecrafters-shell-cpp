@@ -64,3 +64,16 @@ bool is_executable_file(const std::filesystem::path &filepath) {
 
     return access(filepath.c_str(), X_OK) == 0;
 }
+
+void ltrim(std::string &s) {
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char c) {
+                return !std::isspace(c);
+            }));
+}
+
+void rtrim(std::string &s) {
+    s.erase(std::find_if(s.rbegin(), s.rend(),
+                         [](unsigned char c) { return !std::isspace(c); })
+                .base(),
+            s.end());
+}

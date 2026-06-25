@@ -5,10 +5,10 @@
 
 class TypeCommand : public BuiltinCommand {
   private:
-    virtual void Process(std::vector<std::string> arguments) const override;
+    virtual void Process(std::vector<Token> tokens) const override;
 
     const BuiltinRegistry *m_registry;
 
   public:
-    TypeCommand(const BuiltinRegistry *registry);
+    TypeCommand(const BuiltinRegistry *registry, Output *output);
 };

@@ -1,16 +1,22 @@
 #include "echo.h"
+#include "parser/token_parser.h"
+#include <sstream>
 
-#include <iostream>
+EchoCommand::EchoCommand(Output *output)
+    : BuiltinCommand("echo", "echo is a shell builtin", output) {}
 
-EchoCommand::EchoCommand()
-    : BuiltinCommand("echo", "echo is a shell builtin") {}
+void EchoCommand::Process(std::vector<Token> tokens) const {
 
-void EchoCommand::Process(std::vector<std::string> arguments) const {
-    for (size_t i = 1; i < arguments.size(); i++) {
+    std::stringstream ss;
+    for (size_t i = 1; i < tokens.size(); i++) {
+        if (tokens[i].type != TokenType::NORMAL)
+            break;
 
-        std::cout << arguments[i];
-        if (i < arguments.size() - 1)
-            std::cout << " ";
+        ss << tokens[i].token;
+        if (i < tokens.size() - 1)
+            ss << " ";
     }
-    std::cout << std::endl;
+    ss << std::endl;
+
+    m_output->Put(tokens, ss.str().c_str());
 }

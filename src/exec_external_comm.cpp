@@ -4,30 +4,32 @@
 #include <cstdio>
 #include <filesystem>
 #include <iomanip>
-#include <iostream>
 #include <sstream>
 
-ExecExternalCommand::ExecExternalCommand() : m_Parser(TokenParser()) {}
+ExecExternalCommand::ExecExternalCommand(Output *output)
+    : m_Parser(TokenParser()), m_Output(output) {}
 
-bool ExecExternalCommand::Exec(std::string commandline) const {
-    std::vector<std::string> comms_and_args = m_Parser.Parse(commandline);
-    if (comms_and_args.size() == 0)
+bool ExecExternalCommand::Exec(const std::string &commandline) const {
+    std::vector<Token> tokens = m_Parser.Parse(commandline);
+    if (tokens.size() == 0)
         return false;
 
-    std::filesystem::path exec_path = find_executable(comms_and_args[0]);
+    std::filesystem::path exec_path = find_executable(tokens[0].token);
     if (exec_path == "")
         return false;
 
     std::stringstream exec_path_with_args;
-    for (int i = 0; i < comms_and_args.size(); i++) {
-        if (comms_and_args[i].find(' ') != std::string::npos ||
-            comms_and_args[i].find('\'') != std::string::npos ||
-            comms_and_args[i].find('\\') != std::string::npos) {
-            exec_path_with_args << std::quoted(comms_and_args[i]);
+    for (int i = 0; i < tokens.size(); i++) {
+        if (tokens[i].type != TokenType::NORMAL)
+            break;
+        if (tokens[i].token.find(' ') != std::string::npos ||
+            tokens[i].token.find('\'') != std::string::npos ||
+            tokens[i].token.find('\\') != std::string::npos) {
+            exec_path_with_args << std::quoted(tokens[i].token);
         } else {
-            exec_path_with_args << comms_and_args[i];
+            exec_path_with_args << tokens[i].token;
         }
-        if (i != comms_and_args.size() - 1)
+        if (i != tokens.size() - 1)
             exec_path_with_args << " ";
     }
 
@@ -37,7 +39,7 @@ bool ExecExternalCommand::Exec(std::string commandline) const {
 
     char buffer[128];
     while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
-        std::cout << buffer;
+        m_Output->Put(tokens, buffer);
     }
     pclose(pipe);
 

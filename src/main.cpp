@@ -6,14 +6,21 @@
 #include "echo.h"
 #include "exec_external_comm.h"
 #include "exit.h"
+#include "output/console_output.h"
+#include "output/output.h"
+#include "output/redirect_std_out.h"
 #include "type.h"
 
 int main() {
+    Output output;
+    output.AddType(new RedirectStdOut());
+    output.AddType(new ConsoleOutput());
+
     BuiltinRegistry registry;
-    EchoCommand echo_command;
-    ExitCommand exit_command;
-    TypeCommand type_command(&registry);
-    ExecExternalCommand exec_external_comm;
+    EchoCommand echo_command(&output);
+    ExitCommand exit_command(&output);
+    TypeCommand type_command(&registry, &output);
+    ExecExternalCommand exec_external_comm(&output);
 
     registry.RegisterCommand(&echo_command);
     registry.RegisterCommand(&exit_command);
@@ -30,7 +37,6 @@ int main() {
         std::getline(std::cin, user_input);
 
         const BuiltinCommand *command = registry.FindCommand(user_input);
-
         if (command) {
             command->Execute(user_input);
 
