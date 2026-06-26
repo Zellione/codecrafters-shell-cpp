@@ -32,6 +32,12 @@ std::vector<Token> TokenParser::Parse(const std::string &commandline) {
             buffer += tmp.buffer;
             pos = tmp.end_pos;
             break;
+        case ParserState::REDIRECT_STDOUT_APPEND:
+        case ParserState::REDIRECT_STDERR_APPEND:
+            tmp = ParseRedirect(commandline, pos + 1);
+            buffer += tmp.buffer;
+            pos = tmp.end_pos;
+            break;
         case ParserState::NORMAL:
         default:
             if (commandline[pos] != ' ') {
@@ -64,7 +70,11 @@ TokenType TokenParser::DetermineTokenType(ParserState state) {
     case ParserState::REDIRECT_STDOUT:
         return TokenType::REDIRECT_STDOUT;
     case ParserState::REDIRECT_STDERR:
-        return TokenType::REDIRECT_STDERR;
+        return TokenType::REDIRECT_STDDERR;
+    case ParserState::REDIRECT_STDOUT_APPEND:
+        return TokenType::REDIRECT_STDOUT_APPEND;
+    case ParserState::REDIRECT_STDERR_APPEND:
+        return TokenType::REDIRECT_STDERR_APPEND;
     default:
         break;
     }
@@ -82,6 +92,15 @@ ParserState TokenParser::DetermineState(const std::string &commandline,
     }
     if (commandline[pos] == '\\') {
         return ParserState::ON_BACKSLASH;
+    }
+    if ((commandline[pos] == '>' && commandline[pos + 1] == '>') ||
+        (commandline[pos] == '1' && commandline[pos + 1] == '>' &&
+         commandline[pos + 2] == '>')) {
+        return ParserState::REDIRECT_STDOUT_APPEND;
+    }
+    if (commandline[pos] == '2' && commandline[pos + 1] == '>' &&
+        commandline[pos + 2] == '>') {
+        return ParserState::REDIRECT_STDERR_APPEND;
     }
     if (commandline[pos] == '>' ||
         (commandline[pos] == '1' && commandline[pos + 1] == '>')) {

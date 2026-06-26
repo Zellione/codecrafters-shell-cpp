@@ -4,7 +4,7 @@
 
 class RedirectStdOut : public OutputType {
   private:
-    [[nodiscard]] static std::string
+    [[nodiscard]] static const Token*
     GetStdOut(const std::vector<Token> &tokens);
 
   public:

@@ -3,7 +3,9 @@
 
 #include <filesystem>
 #include <iomanip>
+#include <poll.h>
 #include <sstream>
+#include <sys/poll.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -73,25 +75,66 @@ bool ExecExternalCommand::Exec(const std::string &commandline) const {
     close(stdout_pipe[1]);
     close(stderr_pipe[1]);
 
-    auto read_pipe = [](int fd) {
-        std::string out;
-        std::array<char, 256> buffer;
-        ssize_t n;
-        while ((n = read(fd, buffer.data(), sizeof(buffer.data()))) > 0) {
-            out.append(buffer.data(), n);
-        }
-        close(fd);
+    CmdResult result;
+    ReadPipes(stdout_pipe[0], stderr_pipe[0], result);
 
-        return out;
-    };
-
-    m_Output->Put(tokens, read_pipe(stdout_pipe[0]), OutputTarget::STDOUT);
-    m_Output->Put(tokens, read_pipe(stderr_pipe[0]), OutputTarget::ERROUT);
+    m_Output->Put(tokens, result.stdout_output, OutputTarget::STDOUT);
+    m_Output->Put(tokens, result.stderr_output, OutputTarget::STDERR);
 
     int status;
     waitpid(pid, &status, 0);
 
-    // int exit_code = WIFEXITED(status) ? WEXITSTATUS(status) : -1;
+    result.exit_code = WIFEXITED(status) ? WEXITSTATUS(status) : -1;
 
     return true;
+}
+
+void ExecExternalCommand::ReadPipes(int stdout_fd, int stderr_fd,
+                                    CmdResult &result) {
+    // register both pipe read ends with poll
+    std::array<struct pollfd, 2> fds;
+    fds[0].fd = stdout_fd;
+    fds[0].events = POLLIN;
+    fds[1].fd = stderr_fd;
+    fds[1].events = POLLIN;
+
+    std::array<char, 256> buffer;
+
+    while (true) {
+        // wait until at least one fd is ready (no timeout: -1)
+        int ready = poll(fds.data(), fds.size(), -1);
+        if (ready <= 0) {
+            break;
+        }
+
+        // check stdout
+        if ((fds[0].revents & POLLIN) != 0) {
+            ssize_t n = read(stdout_fd, buffer.data(), sizeof(buffer.data()));
+            if (n > 0) {
+                result.stdout_output.append(buffer.data(), n);
+            }
+        }
+        if ((fds[0].revents & POLLHUP) != 0) {
+            fds[0].fd = -1;
+        }
+
+        // check stderr
+        if ((fds[1].revents & POLLIN) != 0) {
+            ssize_t n = read(stderr_fd, buffer.data(), sizeof(buffer.data()));
+            if (n > 0) {
+                result.stderr_output.append(buffer.data(), n);
+            }
+        }
+        if ((fds[1].revents & POLLHUP) != 0) {
+            fds[1].fd = -1;
+        }
+
+        // exit when both pipes are closed
+        if (fds[0].fd == -1 && fds[1].fd == -1) {
+            break;
+        }
+    }
+
+    close(stdout_fd);
+    close(stderr_fd);
 }

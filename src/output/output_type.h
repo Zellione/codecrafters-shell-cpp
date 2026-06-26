@@ -3,7 +3,7 @@
 #include "../parser/token_parser.h"
 #include <vector>
 
-enum class OutputTarget : std::uint8_t { NONE, STDOUT, ERROUT };
+enum class OutputTarget : std::uint8_t { NONE, STDOUT, STDERR };
 
 class OutputType {
   public:

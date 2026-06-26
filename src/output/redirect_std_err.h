@@ -2,10 +2,10 @@
 
 #include "output_type.h"
 
-class RedirectErrOut : public OutputType {
+class RedirectStdErr : public OutputType {
   private:
-    [[nodiscard]] static std::string
-    GetErrOut(const std::vector<Token> &tokens);
+    [[nodiscard]] static const Token *
+    GetStdErr(const std::vector<Token> &tokens);
 
   public:
     void Print(const std::vector<Token> &tokens,

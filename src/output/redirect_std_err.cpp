@@ -1,18 +1,18 @@
-#include "redirect_std_out.h"
+#include "redirect_std_err.h"
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 
-void RedirectStdOut::Print(const std::vector<Token> &tokens,
+void RedirectStdErr::Print(const std::vector<Token> &tokens,
                            const std::string &out_buffer) const {
-    const Token *output_token = GetStdOut(tokens);
+    const Token *output_token = GetStdErr(tokens);
 
     if (output_token == nullptr || output_token->token.empty()) {
         return;
     }
 
-    if (output_token->type == TokenType::REDIRECT_STDOUT) {
+    if (output_token->type == TokenType::REDIRECT_STDDERR) {
         if (std::filesystem::exists(output_token->token)) {
             std::filesystem::remove(output_token->token);
         }
@@ -27,21 +27,21 @@ void RedirectStdOut::Print(const std::vector<Token> &tokens,
     file.flush();
 }
 
-bool RedirectStdOut::IsApplicable(const std::vector<Token> &tokens,
+bool RedirectStdErr::IsApplicable(const std::vector<Token> &tokens,
                                   OutputTarget target) const {
     return std::ranges::any_of(
                tokens,
                [](const Token &token) {
-                   return token.type == TokenType::REDIRECT_STDOUT ||
-                          token.type == TokenType::REDIRECT_STDOUT_APPEND;
+                   return token.type == TokenType::REDIRECT_STDDERR ||
+                          token.type == TokenType::REDIRECT_STDERR_APPEND;
                }) &&
-           (target == OutputTarget::STDOUT || target == OutputTarget::NONE);
+           (target == OutputTarget::STDERR || target == OutputTarget::NONE);
 }
 
-const Token *RedirectStdOut::GetStdOut(const std::vector<Token> &tokens) {
+const Token *RedirectStdErr::GetStdErr(const std::vector<Token> &tokens) {
     for (const auto &token : tokens) {
-        if (token.type == TokenType::REDIRECT_STDOUT ||
-            token.type == TokenType::REDIRECT_STDOUT_APPEND) {
+        if (token.type == TokenType::REDIRECT_STDDERR ||
+            token.type == TokenType::REDIRECT_STDERR_APPEND) {
             return &token;
         }
     }

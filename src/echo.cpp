@@ -21,5 +21,5 @@ void EchoCommand::Process(const std::vector<Token> &tokens) const {
     ss << '\n';
 
     m_output->Put(tokens, ss.str(), OutputTarget::STDOUT);
-    m_output->Put(tokens, "", OutputTarget::ERROUT);
+    m_output->Put(tokens, "", OutputTarget::STDERR);
 }

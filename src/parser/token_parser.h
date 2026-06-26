@@ -11,13 +11,17 @@ enum class ParserState : std::uint8_t {
     INSIDE_DOUBLE_QUOTES,
     ON_BACKSLASH,
     REDIRECT_STDOUT,
-    REDIRECT_STDERR
+    REDIRECT_STDOUT_APPEND,
+    REDIRECT_STDERR,
+    REDIRECT_STDERR_APPEND
 };
 
 enum class TokenType : std::uint8_t {
     NORMAL,
     REDIRECT_STDOUT,
-    REDIRECT_STDERR
+    REDIRECT_STDDERR,
+    REDIRECT_STDOUT_APPEND,
+    REDIRECT_STDERR_APPEND
 };
 
 struct Token {

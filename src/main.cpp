@@ -8,14 +8,14 @@
 #include "exit.h"
 #include "output/console_output.h"
 #include "output/output.h"
-#include "output/redirect_err_out.h"
+#include "output/redirect_std_err.h"
 #include "output/redirect_std_out.h"
 #include "type.h"
 
 int main() {
     Output output;
     output.AddType(new RedirectStdOut());
-    output.AddType(new RedirectErrOut());
+    output.AddType(new RedirectStdErr());
     output.AddType(new ConsoleOutput());
 
     BuiltinRegistry registry;
