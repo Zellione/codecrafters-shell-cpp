@@ -1,11 +1,11 @@
-#include "redirect_std_out.h"
+#include "redirect_err_out.h"
 #include <algorithm>
 #include <fstream>
 #include <iostream>
 
-void RedirectStdOut::Print(const std::vector<Token> &tokens,
+void RedirectErrOut::Print(const std::vector<Token> &tokens,
                            const std::string &out_buffer) const {
-    std::string output_name = GetStdOut(tokens);
+    std::string output_name = GetErrOut(tokens);
 
     if (output_name.empty()) {
         return;
@@ -21,19 +21,19 @@ void RedirectStdOut::Print(const std::vector<Token> &tokens,
     file.flush();
 }
 
-bool RedirectStdOut::IsApplicable(const std::vector<Token> &tokens,
+bool RedirectErrOut::IsApplicable(const std::vector<Token> &tokens,
                                   OutputTarget target) const {
     return std::ranges::any_of(tokens,
                                [](const Token &token) {
                                    return token.type ==
-                                          TokenType::REDIRECT_STDOUT;
+                                          TokenType::REDIRECT_STDERR;
                                }) &&
-           (target == OutputTarget::STDOUT || target == OutputTarget::NONE);
+           (target == OutputTarget::ERROUT || target == OutputTarget::NONE);
 }
 
-std::string RedirectStdOut::GetStdOut(const std::vector<Token> &tokens) {
+std::string RedirectErrOut::GetErrOut(const std::vector<Token> &tokens) {
     for (const auto &token : tokens) {
-        if (token.type == TokenType::REDIRECT_STDOUT) {
+        if (token.type == TokenType::REDIRECT_STDERR) {
             return token.token;
         }
     }

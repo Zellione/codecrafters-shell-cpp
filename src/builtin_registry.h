@@ -7,7 +7,8 @@ class BuiltinRegistry {
     std::vector<BuiltinCommand *> m_commands;
 
   public:
-    const BuiltinCommand *FindCommand(std::string command) const;
+    [[nodiscard]] const BuiltinCommand *
+    FindCommand(const std::string &command) const;
 
     void RegisterCommand(BuiltinCommand *command);
 };

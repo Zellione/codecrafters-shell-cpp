@@ -8,12 +8,14 @@
 #include "exit.h"
 #include "output/console_output.h"
 #include "output/output.h"
+#include "output/redirect_err_out.h"
 #include "output/redirect_std_out.h"
 #include "type.h"
 
 int main() {
     Output output;
     output.AddType(new RedirectStdOut());
+    output.AddType(new RedirectErrOut());
     output.AddType(new ConsoleOutput());
 
     BuiltinRegistry registry;
@@ -37,16 +39,17 @@ int main() {
         std::getline(std::cin, user_input);
 
         const BuiltinCommand *command = registry.FindCommand(user_input);
-        if (command) {
+        if (command != nullptr) {
             command->Execute(user_input);
 
             continue;
         }
 
         bool external_command = exec_external_comm.Exec(user_input);
-        if (external_command)
+        if (external_command) {
             continue;
+        }
 
-        std::cout << user_input << ": command not found" << std::endl;
+        std::cout << user_input << ": command not found" << '\n';
     }
 }

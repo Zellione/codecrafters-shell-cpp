@@ -1,9 +1,11 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
+#include <utility>
 #include <vector>
 
-enum class ParserState {
+enum class ParserState : std::uint8_t {
     NORMAL,
     INSIDE_SINGLE_QUOTES,
     INSIDE_DOUBLE_QUOTES,
@@ -12,18 +14,23 @@ enum class ParserState {
     REDIRECT_STDERR
 };
 
-enum class TokenType { NORMAL, REDIRECT_STDOUT, REDIRECT_STDERR };
+enum class TokenType : std::uint8_t {
+    NORMAL,
+    REDIRECT_STDOUT,
+    REDIRECT_STDERR
+};
 
 struct Token {
-    Token(std::string token, TokenType type) : token(token), type(type) {}
+    Token(std::string token, TokenType type)
+        : token(std::move(token)), type(type) {}
     std::string token;
     TokenType type;
 };
 
 struct InternalToken {
-    InternalToken() : start_pos(0), end_pos(0), buffer("") {}
+    InternalToken() : start_pos(0), end_pos(0) {}
     InternalToken(size_t start_pos, size_t end_pos, std::string buffer)
-        : start_pos(start_pos), end_pos(end_pos), buffer(buffer) {}
+        : start_pos(start_pos), end_pos(end_pos), buffer(std::move(buffer)) {}
     size_t start_pos;
     size_t end_pos;
     std::string buffer;
@@ -31,22 +38,27 @@ struct InternalToken {
 
 class TokenParser {
   private:
-    ParserState DetermineState(const std::string &commandline, size_t pos,
-                               ParserState current) const;
-    TokenType DetermineTokenType(ParserState state) const;
+    [[nodiscard]] static ParserState
+    DetermineState(const std::string &commandline, size_t pos,
+                   ParserState current);
 
-    InternalToken ParseInsideSingleQuotes(const std::string &commandline,
-                                          size_t start_pos) const;
-    InternalToken ParseInsideDoubleQuotes(const std::string &commandline,
-                                          size_t start_pos) const;
-    InternalToken ParsePreviousBackslash(const std::string &commandline,
-                                         size_t start_pos) const;
+    [[nodiscard]] static TokenType DetermineTokenType(ParserState state);
 
-    InternalToken ParseStdOutRedirect(const std::string &commandline,
-                                      size_t start_pos) const;
+    [[nodiscard]] static InternalToken
+    ParseInsideSingleQuotes(const std::string &commandline, size_t start_pos);
+
+    [[nodiscard]] static InternalToken
+    ParseInsideDoubleQuotes(const std::string &commandline, size_t start_pos);
+
+    [[nodiscard]] static InternalToken
+    ParsePreviousBackslash(const std::string &commandline, size_t start_pos);
+
+    [[nodiscard]] static InternalToken
+    ParseRedirect(const std::string &commandline, size_t start_pos);
 
   public:
-    TokenParser();
+    TokenParser() = default;
 
-    std::vector<Token> Parse(const std::string &commandline) const;
+    [[nodiscard]] static std::vector<Token>
+    Parse(const std::string &commandline);
 };

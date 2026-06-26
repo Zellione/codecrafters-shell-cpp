@@ -1,15 +1,19 @@
 #include "builtin_command.h"
 
-BuiltinCommand::BuiltinCommand(std::string name, std::string description,
-                               Output *output)
-    : m_name(name), m_description(description), m_output(output), m_parser() {}
+#include <utility>
 
-bool BuiltinCommand::IsCommand(std::string command) const {
-    return command.substr(0, m_name.length()) == m_name;
+using std::string;
+
+BuiltinCommand::BuiltinCommand(string name, string description, Output *output)
+    : m_name(std::move(name)), m_description(std::move(description)),
+      m_output(output) {}
+
+bool BuiltinCommand::IsCommand(const string &command) const {
+    return command.starts_with(m_name);
 }
 
-void BuiltinCommand::Execute(std::string commandline) const {
-    std::vector<Token> arguments = m_parser.Parse(commandline);
+void BuiltinCommand::Execute(const string &commandline) const {
+    std::vector<Token> arguments = TokenParser::Parse(commandline);
 
     Process(arguments);
 }

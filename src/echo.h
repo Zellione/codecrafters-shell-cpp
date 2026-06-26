@@ -4,7 +4,7 @@
 
 class EchoCommand : public BuiltinCommand {
   private:
-    virtual void Process(std::vector<Token> tokens) const override;
+    void Process(const std::vector<Token> &tokens) const override;
 
   public:
     EchoCommand(Output *output);

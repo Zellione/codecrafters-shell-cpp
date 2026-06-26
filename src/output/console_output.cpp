@@ -2,11 +2,12 @@
 #include <iostream>
 
 void ConsoleOutput::Print(const std::vector<Token> &tokens,
-                          const char *out_buffer) const {
+                          const std::string &out_buffer) const {
 
     std::cout << out_buffer;
 }
 
-bool ConsoleOutput::IsApplicable(const std::vector<Token> &tokens) const {
+bool ConsoleOutput::IsApplicable(const std::vector<Token> &tokens,
+                                 OutputTarget target) const {
     return true;
 }

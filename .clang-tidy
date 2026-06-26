@@ -1,0 +1,23 @@
+# Comma-separated check globs. Leading '-' disables. Order matters: later wins.
+Checks: >
+  bugprone-*,
+  clang-analyzer-*,
+  performance-*,
+  portability-*,
+  readability-*,
+  modernize-*,
+  -modernize-use-trailing-return-type,
+  -readability-magic-numbers,
+  -readability-identifier-length,
+  -portability-avoid-pragma-once,
+  -bugprone-easily-swappable-parameters
+
+# '' = warnings stay warnings. Use a glob (e.g. 'bugprone-*') to promote some to errors.
+WarningsAsErrors: ''
+
+# Which headers get diagnostics. '.*' = all project headers.
+# Use something like '^(?!.*/(third_party|vendor)/).*' to skip vendored code.
+HeaderFilterRegex: '.*'
+
+# Don't emit formatting fixes (leave that to clang-format / conform).
+FormatStyle: none

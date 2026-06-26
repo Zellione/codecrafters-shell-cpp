@@ -9,10 +9,11 @@ class Output {
     std::vector<OutputType *> m_outputs;
 
   public:
-    Output();
+    Output() = default;
     ~Output();
 
     void AddType(OutputType *output);
 
-    void Put(const std::vector<Token> &tokens, const char *out_buffer);
+    void Put(const std::vector<Token> &tokens, const std::string &out_buffer,
+             OutputTarget target);
 };

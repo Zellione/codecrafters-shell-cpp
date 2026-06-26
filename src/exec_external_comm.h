@@ -1,7 +1,6 @@
 #pragma once
 
 #include "output/output.h"
-#include "parser/token_parser.h"
 
 class ExecExternalCommand {
   private:
@@ -10,5 +9,5 @@ class ExecExternalCommand {
 
   public:
     ExecExternalCommand(Output *output);
-    bool Exec(const std::string &commandline) const;
+    [[nodiscard]] bool Exec(const std::string &commandline) const;
 };

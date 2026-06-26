@@ -1,26 +1,26 @@
 #include "output.h"
 
-Output::Output() {}
-
 Output::~Output() {
-    for (size_t i = 0; i < m_outputs.size(); i++) {
-        delete m_outputs[i];
-        m_outputs[i] = nullptr;
+    for (auto &m_output : m_outputs) {
+        delete m_output;
+        m_output = nullptr;
     }
 }
 
 void Output::AddType(OutputType *output) { m_outputs.push_back(output); }
-void Output::Put(const std::vector<Token> &tokens, const char *out_buffer) {
+void Output::Put(const std::vector<Token> &tokens,
+                 const std::string &out_buffer, OutputTarget target) {
     OutputType *out = nullptr;
-    for (const auto output : m_outputs) {
-        if (output->IsApplicable(tokens)) {
+    for (auto *const output : m_outputs) {
+        if (output->IsApplicable(tokens, target)) {
             out = output;
             break;
         }
     }
 
-    if (out == nullptr)
+    if (out == nullptr) {
         return;
+    }
 
     out->Print(tokens, out_buffer);
 }

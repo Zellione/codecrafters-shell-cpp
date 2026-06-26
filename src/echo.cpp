@@ -5,18 +5,21 @@
 EchoCommand::EchoCommand(Output *output)
     : BuiltinCommand("echo", "echo is a shell builtin", output) {}
 
-void EchoCommand::Process(std::vector<Token> tokens) const {
+void EchoCommand::Process(const std::vector<Token> &tokens) const {
 
     std::stringstream ss;
     for (size_t i = 1; i < tokens.size(); i++) {
-        if (tokens[i].type != TokenType::NORMAL)
+        if (tokens[i].type != TokenType::NORMAL) {
             break;
+        }
 
         ss << tokens[i].token;
-        if (i < tokens.size() - 1)
+        if (i < tokens.size() - 1) {
             ss << " ";
+        }
     }
-    ss << std::endl;
+    ss << '\n';
 
-    m_output->Put(tokens, ss.str().c_str());
+    m_output->Put(tokens, ss.str(), OutputTarget::STDOUT);
+    m_output->Put(tokens, "", OutputTarget::ERROUT);
 }

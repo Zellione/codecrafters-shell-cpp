@@ -4,4 +4,4 @@
 ExitCommand::ExitCommand(Output *output)
     : BuiltinCommand("exit", "exit is a shell builtin", output) {}
 
-void ExitCommand::Process(std::vector<Token> tokens) const { exit(0); }
+void ExitCommand::Process(const std::vector<Token> &tokens) const { exit(0); }
