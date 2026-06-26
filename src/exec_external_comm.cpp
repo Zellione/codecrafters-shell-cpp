@@ -38,10 +38,10 @@ bool ExecExternalCommand::Exec(const std::string &commandline) const {
 
     // TODO: Change this to a more complex bevahiour, which will be able to
     // catch stdout and stderr seperately
-    int stdout_pipe[2];
-    int stderr_pipe[2];
-    pipe(stdout_pipe);
-    pipe(stderr_pipe);
+    std::array<int, 2> stdout_pipe;
+    std::array<int, 2> stderr_pipe;
+    pipe(stdout_pipe.data());
+    pipe(stderr_pipe.data());
 
     pid_t pid = fork();
 
@@ -75,10 +75,10 @@ bool ExecExternalCommand::Exec(const std::string &commandline) const {
 
     auto read_pipe = [](int fd) {
         std::string out;
-        char buffer[256];
+        std::array<char, 256> buffer;
         ssize_t n;
-        while ((n = read(fd, buffer, sizeof(buffer))) > 0) {
-            out.append(buffer, n);
+        while ((n = read(fd, buffer.data(), sizeof(buffer.data()))) > 0) {
+            out.append(buffer.data(), n);
         }
         close(fd);
 
@@ -91,7 +91,7 @@ bool ExecExternalCommand::Exec(const std::string &commandline) const {
     int status;
     waitpid(pid, &status, 0);
 
-    int exit_code = WIFEXITED(status) ? WEXITSTATUS(status) : -1;
+    // int exit_code = WIFEXITED(status) ? WEXITSTATUS(status) : -1;
 
     return true;
 }
