@@ -1,9 +1,10 @@
 #pragma once
 
-#include "builtin_command.h"
-#include "builtin_registry.h"
+#include "command.h"
+#include "registry.h"
 
-class TypeCommand : public BuiltinCommand {
+class TypeCommand : public BuiltinCommand
+{
   private:
     void Process(const std::vector<Token> &tokens) const override;
 

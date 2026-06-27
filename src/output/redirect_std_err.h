@@ -2,7 +2,8 @@
 
 #include "output_type.h"
 
-class RedirectStdErr : public OutputType {
+class RedirectStdErr : public OutputType
+{
   private:
     [[nodiscard]] static const Token *
     GetStdErr(const std::vector<Token> &tokens);

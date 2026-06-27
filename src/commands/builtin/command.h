@@ -1,10 +1,11 @@
 #pragma once
 
-#include "output/output.h"
+#include "../../output/output.h"
 #include <string>
 #include <vector>
 
-class BuiltinCommand {
+class BuiltinCommand
+{
   private:
     TokenParser m_parser;
 
@@ -20,8 +21,10 @@ class BuiltinCommand {
     BuiltinCommand(std::string name, std::string description, Output *output);
 
     [[nodiscard]] virtual bool IsCommand(const std::string &command) const;
+    [[nodiscard]] virtual bool NameStartWith(const std::string &partial) const;
 
-    [[nodiscard]] std::string GetDescription() const;
+    [[nodiscard]] const std::string &GetName() const;
+    [[nodiscard]] const std::string &GetDescription() const;
 
-    virtual void Execute(const std::string &commandline) const;
+    virtual void Execute(const std::vector<Token> &tokens) const;
 };

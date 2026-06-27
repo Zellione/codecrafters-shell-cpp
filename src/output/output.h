@@ -4,7 +4,8 @@
 #include "output_type.h"
 #include <vector>
 
-class Output {
+class Output
+{
   private:
     std::vector<OutputType *> m_outputs;
 

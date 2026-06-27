@@ -1,5 +1,5 @@
-#include "exec_external_comm.h"
-#include "helper.h"
+#include "command.h"
+#include "../../helper.h"
 
 #include <filesystem>
 #include <poll.h>
@@ -7,21 +7,21 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-ExecExternalCommand::ExecExternalCommand(Output *output) : m_Output(output) {}
+ExternalCommand::ExternalCommand(Output *output) : m_Output(output) {}
 
-bool ExecExternalCommand::Exec(const std::string &commandline) const {
-    std::vector<Token> tokens = TokenParser::Parse(commandline);
-    if (tokens.empty()) {
+bool ExternalCommand::Exec(const std::vector<Token> &tokens) const
+{
+    if (tokens.empty())
+    {
         return false;
     }
 
     std::filesystem::path exec_path = find_executable(tokens[0].token);
-    if (exec_path == "") {
+    if (exec_path == "")
+    {
         return false;
     }
 
-    // TODO: Change this to a more complex bevahiour, which will be able to
-    // catch stdout and stderr seperately
     std::array<int, 2> stdout_pipe;
     std::array<int, 2> stderr_pipe;
     pipe(stdout_pipe.data());
@@ -29,7 +29,8 @@ bool ExecExternalCommand::Exec(const std::string &commandline) const {
 
     pid_t pid = fork();
 
-    if (pid == 0) {
+    if (pid == 0)
+    {
         // Child process
         close(stdout_pipe[0]);
         close(stderr_pipe[0]);
@@ -42,8 +43,10 @@ bool ExecExternalCommand::Exec(const std::string &commandline) const {
 
         // Build argv
         std::vector<char *> argv;
-        for (auto &token : tokens) {
-            if (token.type == TokenType::NORMAL) {
+        for (const auto &token : tokens)
+        {
+            if (token.type == TokenType::NORMAL)
+            {
                 argv.push_back(const_cast<char *>(token.token.c_str()));
             }
         }
@@ -71,8 +74,8 @@ bool ExecExternalCommand::Exec(const std::string &commandline) const {
     return true;
 }
 
-void ExecExternalCommand::ReadPipes(int stdout_fd, int stderr_fd,
-                                    CmdResult &result) {
+void ExternalCommand::ReadPipes(int stdout_fd, int stderr_fd, CmdResult &result)
+{
     // register both pipe read ends with poll
     std::array<struct pollfd, 2> fds;
     fds[0].fd = stdout_fd;
@@ -80,39 +83,58 @@ void ExecExternalCommand::ReadPipes(int stdout_fd, int stderr_fd,
     fds[1].fd = stderr_fd;
     fds[1].events = POLLIN;
 
-    std::array<char, 256> buffer;
+    std::array<char, 256> buffer{};
 
-    while (true) {
+    auto drain = [&](int fd, std::string &out) {
+        ssize_t n;
+        while ((n = read(fd, buffer.begin(), sizeof(buffer.begin()))) > 0)
+        {
+            out.append(buffer.begin(), n);
+        }
+    };
+
+    while (true)
+    {
         // wait until at least one fd is ready (no timeout: -1)
-        int ready = poll(fds.data(), fds.size(), -1);
-        if (ready <= 0) {
+        int ready = poll(fds.begin(), fds.size(), -1);
+        if (ready <= 0)
+        {
             break;
         }
 
         // check stdout
-        if ((fds[0].revents & POLLIN) != 0) {
-            ssize_t n = read(stdout_fd, buffer.data(), sizeof(buffer.data()));
-            if (n > 0) {
-                result.stdout_output.append(buffer.data(), n);
+        if ((fds[0].revents & POLLIN) != 0)
+        {
+            ssize_t n = read(stdout_fd, buffer.begin(), sizeof(buffer.data()));
+            if (n > 0)
+            {
+                result.stdout_output.append(buffer.begin(), n);
             }
         }
-        if ((fds[0].revents & POLLHUP) != 0) {
+        if ((fds[0].revents & POLLHUP) != 0)
+        {
+            drain(stdout_fd, result.stdout_output);
             fds[0].fd = -1;
         }
 
         // check stderr
-        if ((fds[1].revents & POLLIN) != 0) {
-            ssize_t n = read(stderr_fd, buffer.data(), sizeof(buffer.data()));
-            if (n > 0) {
-                result.stderr_output.append(buffer.data(), n);
+        if ((fds[1].revents & POLLIN) != 0)
+        {
+            ssize_t n = read(stderr_fd, buffer.begin(), sizeof(buffer.data()));
+            if (n > 0)
+            {
+                result.stderr_output.append(buffer.begin(), n);
             }
         }
-        if ((fds[1].revents & POLLHUP) != 0) {
+        if ((fds[1].revents & POLLHUP) != 0)
+        {
+            drain(stderr_fd, result.stderr_output);
             fds[1].fd = -1;
         }
 
         // exit when both pipes are closed
-        if (fds[0].fd == -1 && fds[1].fd == -1) {
+        if (fds[0].fd == -1 && fds[1].fd == -1)
+        {
             break;
         }
     }

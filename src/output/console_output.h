@@ -2,7 +2,8 @@
 
 #include "output_type.h"
 
-class ConsoleOutput : public OutputType {
+class ConsoleOutput : public OutputType
+{
   public:
     ConsoleOutput() = default;
     void Print(const std::vector<Token> &tokens,

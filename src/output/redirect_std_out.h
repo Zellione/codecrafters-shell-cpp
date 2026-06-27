@@ -2,9 +2,10 @@
 
 #include "output_type.h"
 
-class RedirectStdOut : public OutputType {
+class RedirectStdOut : public OutputType
+{
   private:
-    [[nodiscard]] static const Token*
+    [[nodiscard]] static const Token *
     GetStdOut(const std::vector<Token> &tokens);
 
   public:

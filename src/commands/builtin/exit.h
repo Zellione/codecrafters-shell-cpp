@@ -1,8 +1,9 @@
 #pragma once
 
-#include "builtin_command.h"
+#include "command.h"
 
-class ExitCommand : public BuiltinCommand {
+class ExitCommand : public BuiltinCommand
+{
   private:
     void Process(const std::vector<Token> &tokens) const override;
 

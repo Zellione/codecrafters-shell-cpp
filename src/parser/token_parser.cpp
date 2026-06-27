@@ -2,16 +2,19 @@
 
 #include "../helper.h"
 
-std::vector<Token> TokenParser::Parse(const std::string &commandline) {
+std::vector<Token> TokenParser::Parse(const std::string &commandline)
+{
     std::vector<Token> tokens = std::vector<Token>();
 
     ParserState state = ParserState::NORMAL;
     std::string buffer;
     size_t pos = 0;
-    while (pos < commandline.length()) {
+    while (pos < commandline.length())
+    {
         state = DetermineState(commandline, pos, state);
         InternalToken tmp;
-        switch (state) {
+        switch (state)
+        {
         case ParserState::INSIDE_SINGLE_QUOTES:
             tmp = ParseInsideSingleQuotes(commandline, pos);
             buffer += tmp.buffer;
@@ -40,12 +43,15 @@ std::vector<Token> TokenParser::Parse(const std::string &commandline) {
             break;
         case ParserState::NORMAL:
         default:
-            if (commandline[pos] != ' ') {
+            if (commandline[pos] != ' ')
+            {
                 buffer += commandline[pos];
             }
-            if (commandline[pos] == ' ') {
+            if (commandline[pos] == ' ')
+            {
                 while (pos + 1 < commandline.length() &&
-                       commandline[pos + 1] == ' ') {
+                       commandline[pos + 1] == ' ')
+                {
                     pos++;
                 }
             }
@@ -54,7 +60,8 @@ std::vector<Token> TokenParser::Parse(const std::string &commandline) {
         }
 
         if (pos + 1 >= commandline.length() ||
-            (commandline[pos] == ' ' && state != ParserState::ON_BACKSLASH)) {
+            (commandline[pos] == ' ' && state != ParserState::ON_BACKSLASH))
+        {
             tokens.emplace_back(buffer, DetermineTokenType(state));
             buffer = "";
         }
@@ -65,8 +72,10 @@ std::vector<Token> TokenParser::Parse(const std::string &commandline) {
     return tokens;
 }
 
-TokenType TokenParser::DetermineTokenType(ParserState state) {
-    switch (state) {
+TokenType TokenParser::DetermineTokenType(ParserState state)
+{
+    switch (state)
+    {
     case ParserState::REDIRECT_STDOUT:
         return TokenType::REDIRECT_STDOUT;
     case ParserState::REDIRECT_STDERR:
@@ -83,30 +92,38 @@ TokenType TokenParser::DetermineTokenType(ParserState state) {
 }
 
 ParserState TokenParser::DetermineState(const std::string &commandline,
-                                        size_t pos, ParserState current) {
-    if (commandline[pos] == '\'') {
+                                        size_t pos, ParserState current)
+{
+    if (commandline[pos] == '\'')
+    {
         return ParserState::INSIDE_SINGLE_QUOTES;
     }
-    if (commandline[pos] == '"') {
+    if (commandline[pos] == '"')
+    {
         return ParserState::INSIDE_DOUBLE_QUOTES;
     }
-    if (commandline[pos] == '\\') {
+    if (commandline[pos] == '\\')
+    {
         return ParserState::ON_BACKSLASH;
     }
     if ((commandline[pos] == '>' && commandline[pos + 1] == '>') ||
         (commandline[pos] == '1' && commandline[pos + 1] == '>' &&
-         commandline[pos + 2] == '>')) {
+         commandline[pos + 2] == '>'))
+    {
         return ParserState::REDIRECT_STDOUT_APPEND;
     }
     if (commandline[pos] == '2' && commandline[pos + 1] == '>' &&
-        commandline[pos + 2] == '>') {
+        commandline[pos + 2] == '>')
+    {
         return ParserState::REDIRECT_STDERR_APPEND;
     }
     if (commandline[pos] == '>' ||
-        (commandline[pos] == '1' && commandline[pos + 1] == '>')) {
+        (commandline[pos] == '1' && commandline[pos + 1] == '>'))
+    {
         return ParserState::REDIRECT_STDOUT;
     }
-    if (commandline[pos] == '2' && commandline[pos + 1] == '>') {
+    if (commandline[pos] == '2' && commandline[pos + 1] == '>')
+    {
         return ParserState::REDIRECT_STDERR;
     }
 
@@ -115,11 +132,12 @@ ParserState TokenParser::DetermineState(const std::string &commandline,
 
 InternalToken
 TokenParser::ParseInsideSingleQuotes(const std::string &commandline,
-                                     size_t start_pos) {
+                                     size_t start_pos)
+{
     std::string buffer;
-    size_t pos = start_pos;
-    pos++;
-    while (pos < commandline.length() && commandline[pos] != '\'') {
+    size_t pos = start_pos + 1;
+    while (pos < commandline.length() && commandline[pos] != '\'')
+    {
         buffer += commandline[pos];
         pos++;
     }
@@ -128,12 +146,14 @@ TokenParser::ParseInsideSingleQuotes(const std::string &commandline,
 }
 InternalToken
 TokenParser::ParseInsideDoubleQuotes(const std::string &commandline,
-                                     size_t start_pos) {
+                                     size_t start_pos)
+{
     std::string buffer;
-    size_t pos = start_pos;
-    pos++;
-    while (pos < commandline.length() && commandline[pos] != '"') {
-        if (commandline[pos] == '\\') {
+    size_t pos = start_pos + 1;
+    while (pos < commandline.length() && commandline[pos] != '"')
+    {
+        if (commandline[pos] == '\\')
+        {
             pos++;
         }
         buffer += commandline[pos];
@@ -144,10 +164,12 @@ TokenParser::ParseInsideDoubleQuotes(const std::string &commandline,
 }
 InternalToken
 TokenParser::ParsePreviousBackslash(const std::string &commandline,
-                                    size_t start_pos) {
+                                    size_t start_pos)
+{
     std::string buffer;
     size_t pos = start_pos + 1;
-    if (pos < commandline.length()) {
+    if (pos < commandline.length())
+    {
         buffer += commandline[pos];
     }
 
@@ -155,15 +177,22 @@ TokenParser::ParsePreviousBackslash(const std::string &commandline,
 }
 
 InternalToken TokenParser::ParseRedirect(const std::string &commandline,
-                                         size_t start_pos) {
+                                         size_t start_pos)
+{
     std::string buffer;
     size_t pos = start_pos + 1;
-
-    if (commandline[pos] == '>') {
+    if (commandline[pos] == '>')
+    {
         pos++;
     }
 
-    while (pos < commandline.length() && commandline[pos] != '>') {
+    while (pos < commandline.length() && commandline[pos] != '>')
+    {
+        if (commandline[pos] == '"')
+        {
+            pos++;
+            continue;
+        }
         buffer += commandline[pos];
         pos++;
     }
