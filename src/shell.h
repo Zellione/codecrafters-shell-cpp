@@ -11,6 +11,8 @@ class Shell
 
     Shell();
 
+    [[nodiscard]] std::string Autocomplete(const std::string &partial) const;
+
   public:
     static Shell &Instance()
     {

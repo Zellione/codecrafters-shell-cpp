@@ -52,7 +52,7 @@ int Shell::TabAutoComplete(int count, int key)
 {
     Shell &shell = Shell::Instance();
 
-    std::string command = shell.m_registry.AutoComplete(rl_line_buffer);
+    std::string command = shell.Autocomplete(rl_line_buffer);
 
     if (command.empty() || command == rl_line_buffer)
     {
@@ -65,4 +65,17 @@ int Shell::TabAutoComplete(int count, int key)
     rl_point = rl_end;
 
     return 0;
+}
+
+std::string Shell::Autocomplete(const std::string &partial) const
+{
+    std::string command = m_registry.AutoComplete(partial);
+    if (!command.empty() && command != partial)
+    {
+        return command;
+    }
+
+    command = ExternalCommand::SearchExecutable(partial);
+
+    return command;
 }

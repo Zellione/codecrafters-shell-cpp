@@ -12,7 +12,6 @@ struct CmdResult
 class ExternalCommand
 {
   private:
-    TokenParser m_Parser;
     Output *m_Output;
 
   public:
@@ -20,4 +19,7 @@ class ExternalCommand
     [[nodiscard]] bool Exec(const std::vector<Token> &tokens) const;
 
     static void ReadPipes(int stdout_fd, int stderr_fd, CmdResult &result);
+
+    [[nodiscard]] static std::string
+    SearchExecutable(const std::string &partial);
 };

@@ -142,3 +142,23 @@ void ExternalCommand::ReadPipes(int stdout_fd, int stderr_fd, CmdResult &result)
     close(stdout_fd);
     close(stderr_fd);
 }
+
+std::string ExternalCommand::SearchExecutable(const std::string &partial)
+{
+    std::string command;
+    std::vector<std::filesystem::path> folders = get_valid_path_folders();
+
+    for (const auto &folder : folders)
+    {
+        for (const auto &entry : std::filesystem::directory_iterator(folder))
+        {
+            if (std::filesystem::is_regular_file(entry.status()) &&
+                entry.path().filename().string().starts_with(partial))
+            {
+                return entry.path().filename().string();
+            }
+        }
+    }
+
+    return command;
+}
