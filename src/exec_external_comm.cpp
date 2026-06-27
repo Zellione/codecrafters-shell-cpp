@@ -2,9 +2,7 @@
 #include "helper.h"
 
 #include <filesystem>
-#include <iomanip>
 #include <poll.h>
-#include <sstream>
 #include <sys/poll.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -20,22 +18,6 @@ bool ExecExternalCommand::Exec(const std::string &commandline) const {
     std::filesystem::path exec_path = find_executable(tokens[0].token);
     if (exec_path == "") {
         return false;
-    }
-
-    std::stringstream exec_path_with_args;
-    for (int i = 0; i < tokens.size(); i++) {
-        if (tokens[i].type != TokenType::NORMAL) {
-            break;
-        }
-        if (tokens[i].token.contains(' ') || tokens[i].token.contains('\'') ||
-            tokens[i].token.contains('\\')) {
-            exec_path_with_args << std::quoted(tokens[i].token);
-        } else {
-            exec_path_with_args << tokens[i].token;
-        }
-        if (i != tokens.size() - 1) {
-            exec_path_with_args << " ";
-        }
     }
 
     // TODO: Change this to a more complex bevahiour, which will be able to
