@@ -9,9 +9,13 @@ class Shell
     ExternalCommand m_external_comm;
     std::string m_current_input;
 
+    std::vector<std::string> m_autocomplete;
+    std::string m_lastprompt;
+
     Shell();
 
-    [[nodiscard]] std::string Autocomplete(const std::string &partial) const;
+    [[nodiscard]] std::vector<std::string>
+    CollectAutocompletes(const std::string &partial) const;
 
   public:
     static Shell &Instance()
@@ -23,4 +27,5 @@ class Shell
     void run();
 
     static int TabAutoComplete(int count, int key);
+    static int TabAutoCompleteMulti(int count, int key);
 };

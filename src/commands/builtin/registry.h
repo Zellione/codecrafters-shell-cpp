@@ -17,7 +17,8 @@ class BuiltinRegistry
     [[nodiscard]] const BuiltinCommand *
     FindCommandInArguments(const std::vector<Token> &tokens, size_t pos) const;
 
-    [[nodiscard]] std::string AutoComplete(const std::string &partial) const;
+    [[nodiscard]] std::vector<std::string>
+    AutoComplete(const std::string &partial) const;
 
     void RegisterCommand(BuiltinCommand *command);
 };

@@ -20,6 +20,6 @@ class ExternalCommand
 
     static void ReadPipes(int stdout_fd, int stderr_fd, CmdResult &result);
 
-    [[nodiscard]] static std::string
+    [[nodiscard]] static std::vector<std::string>
     SearchExecutable(const std::string &partial);
 };

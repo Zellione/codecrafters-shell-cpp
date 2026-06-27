@@ -35,17 +35,18 @@ BuiltinRegistry::FindCommandInArguments(const std::vector<Token> &tokens,
     return nullptr;
 }
 
-string BuiltinRegistry::AutoComplete(const string &partial) const
+std::vector<string> BuiltinRegistry::AutoComplete(const string &partial) const
 {
+    std::vector<string> commands;
     for (auto *const builtin_com : m_commands)
     {
         if (builtin_com->NameStartWith(partial))
         {
-            return builtin_com->GetName();
+            commands.push_back(builtin_com->GetName());
         }
     }
 
-    return partial;
+    return commands;
 }
 
 void BuiltinRegistry::RegisterCommand(BuiltinCommand *command)

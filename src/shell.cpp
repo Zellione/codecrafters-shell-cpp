@@ -4,11 +4,15 @@
 #include "commands/builtin/type.h"
 #include "commands/error/err_not_found.h"
 #include "output/console_output.h"
-#include "output/redirect_std_err.h"
-#include "output/redirect_std_out.h"
+#include "output/redirect_stderr.h"
+#include "output/redirect_stdout.h"
 #include "readline/readline.h"
 
+#include <algorithm>
 #include <iostream>
+#include <sstream>
+#include <string>
+#include <vector>
 
 Shell::Shell() : m_external_comm(&m_output)
 {
@@ -52,30 +56,71 @@ int Shell::TabAutoComplete(int count, int key)
 {
     Shell &shell = Shell::Instance();
 
-    std::string command = shell.Autocomplete(rl_line_buffer);
+    if (rl_line_buffer == shell.m_lastprompt && shell.m_autocomplete.size() > 1)
+    {
+        return Shell::TabAutoCompleteMulti(count, key);
+    }
 
-    if (command.empty() || command == rl_line_buffer)
+    shell.m_autocomplete = shell.CollectAutocompletes(rl_line_buffer);
+    shell.m_lastprompt = rl_line_buffer;
+
+    if (shell.m_autocomplete.empty())
     {
         std::cout << '\x07';
         return 1;
     }
 
-    command += " ";
-    rl_replace_line(command.c_str(), 0);
-    rl_point = rl_end;
+    if (shell.m_autocomplete.size() == 1)
+    {
+        std::string command = shell.m_autocomplete[0] + " ";
+        rl_replace_line(command.c_str(), 0);
+        rl_point = rl_end;
+
+        return 0;
+    }
+
+    std::cout << '\x07';
 
     return 0;
 }
 
-std::string Shell::Autocomplete(const std::string &partial) const
+int Shell::TabAutoCompleteMulti(int count, int key)
 {
-    std::string command = m_registry.AutoComplete(partial);
-    if (!command.empty() && command != partial)
+    Shell &shell = Shell::Instance();
+
+    std::vector<Token> tokens{};
+    if (shell.m_autocomplete.size() > 1)
     {
-        return command;
+        std::ostringstream oss;
+        for (size_t i = 0; i < shell.m_autocomplete.size(); i++)
+        {
+            if (i > 0)
+            {
+                oss << "  ";
+            }
+
+            oss << shell.m_autocomplete[i];
+        }
+        std::string autocompletes =
+            std::format("\n{}\n", std::string(oss.str()));
+
+        shell.m_output.Put(tokens, autocompletes, OutputTarget::STDOUT);
+        rl_redraw_prompt_last_line();
     }
+    return 0;
+}
 
-    command = ExternalCommand::SearchExecutable(partial);
+std::vector<std::string>
+Shell::CollectAutocompletes(const std::string &partial) const
+{
+    std::vector<std::string> commands = m_registry.AutoComplete(partial);
+    std::vector<std::string> ext_commands =
+        ExternalCommand::SearchExecutable(partial);
+    commands.insert(commands.end(), ext_commands.begin(), ext_commands.end());
 
-    return command;
+    std::ranges::sort(commands);
+    commands.erase(std::unique(commands.begin(), commands.end()),
+                   commands.end());
+
+    return commands;
 }
