@@ -8,6 +8,8 @@
 #include "output/redirect_std_out.h"
 #include "readline/readline.h"
 
+#include <iostream>
+
 Shell::Shell() : m_external_comm(&m_output)
 {
     m_output.AddType(new RedirectStdOut());
@@ -52,8 +54,9 @@ int Shell::TabAutoComplete(int count, int key)
 
     std::string command = shell.m_registry.AutoComplete(rl_line_buffer);
 
-    if (command.empty())
+    if (command.empty() || command == rl_line_buffer)
     {
+        std::cout << '\x07';
         return 1;
     }
 
