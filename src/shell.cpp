@@ -210,6 +210,9 @@ Shell::CollectAutocompleteInDir(const std::string &partial) const
         return !file.starts_with(partial);
     });
 
+    std::vector<std::string> dirs = get_subdirs_from_dir(pwd, relative_path);
+    files.insert(files.end(), dirs.begin(), dirs.end());
+
     return files;
 }
 
