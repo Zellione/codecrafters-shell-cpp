@@ -64,7 +64,7 @@ int Shell::TabAutoComplete(int count, int key)
     }
     std::vector<Token> tokens = TokenParser::Parse(rl_line_buffer);
 
-    shell.m_autocomplete = shell.CollectAutocompletes(rl_line_buffer);
+    shell.m_autocomplete = shell.CollectAutocompletes(rl_line_buffer, tokens);
     shell.m_lastprompt = rl_line_buffer;
 
     if (shell.m_autocomplete.empty())
@@ -84,10 +84,23 @@ int Shell::TabAutoComplete(int count, int key)
         pos++;
     }
 
+    const Token &token = tokens.back();
+    std::string cleaned_token = token.token;
+    if (cleaned_token.contains('/'))
+    {
+        cleaned_token = cleaned_token.substr(
+            cleaned_token.rfind('/') + 1,
+            cleaned_token.length() -
+                (cleaned_token.length() - cleaned_token.rfind('/')));
+        pos = newprompt.rfind('/') + 1;
+    }
+
     if (shell.m_autocomplete.size() == 1)
     {
         newprompt = newprompt.replace(pos, newprompt.length() - pos,
-                                      shell.m_autocomplete[0] + " ");
+                                      shell.m_autocomplete[0].ends_with('/')
+                                          ? shell.m_autocomplete[0]
+                                          : shell.m_autocomplete[0] + " ");
         rl_replace_line(newprompt.c_str(), 0);
         rl_point = rl_end;
 
@@ -96,11 +109,13 @@ int Shell::TabAutoComplete(int count, int key)
 
     std::cout << '\x07';
 
-    newprompt =
-        newprompt.replace(pos, newprompt.length() - pos,
-                          shell.LongestCommonPrefix(tokens.back().token));
-    rl_replace_line(newprompt.c_str(), 0);
-    rl_point = rl_end;
+    if (std::string(rl_line_buffer).back() != ' ')
+    {
+        newprompt = newprompt.replace(pos, newprompt.length() - pos,
+                                      shell.LongestCommonPrefix(cleaned_token));
+        rl_replace_line(newprompt.c_str(), 0);
+        rl_point = rl_end;
+    }
 
     return 0;
 }
@@ -131,11 +146,11 @@ int Shell::TabAutoCompleteMulti(int count, int key)
     return 0;
 }
 
-std::vector<std::string> Shell::CollectAutocompletes(const std::string &partial)
+std::vector<std::string>
+Shell::CollectAutocompletes(const std::string &partial,
+                            const std::vector<Token> &tokens)
 {
     std::vector<std::string> autocompletes;
-
-    std::vector<Token> tokens = TokenParser::Parse(partial);
 
     if (tokens.empty())
     {
@@ -144,9 +159,9 @@ std::vector<std::string> Shell::CollectAutocompletes(const std::string &partial)
 
     const Token &token = tokens.back();
     std::string current_token = token.token;
-    bool is_command = token.type == TokenType::COMMAND;
+    bool is_command = token.type == TokenType::COMMAND && partial.back() != ' ';
 
-    if (current_token.starts_with(m_lastprompt))
+    if (current_token.starts_with(m_lastprompt) && partial.back() != ' ')
     {
         std::erase_if(m_autocomplete,
                       [&current_token](const std::string &option) {
@@ -166,13 +181,14 @@ std::vector<std::string> Shell::CollectAutocompletes(const std::string &partial)
     else
     {
         // collect files
-        autocompletes = CollectAutocompleteInDir(current_token);
+        autocompletes = CollectAutocompleteInDir(partial, tokens);
     }
 
     // Sort commands
     std::ranges::sort(autocompletes);
-    autocompletes.erase(std::unique(autocompletes.begin(), autocompletes.end()),
-                        autocompletes.end());
+    autocompletes.erase(
+        std::unique(autocompletes.begin(), autocompletes.end()), // NOLINT
+        autocompletes.end());
 
     return autocompletes;
 }
@@ -190,35 +206,52 @@ Shell::CollectAutocompleteBuiltin(const std::string &partial) const
 }
 
 std::vector<std::string>
-Shell::CollectAutocompleteInDir(const std::string &partial) const
+Shell::CollectAutocompleteInDir(const std::string &partial,
+                                const std::vector<Token> &tokens)
 {
+    const Token &token = tokens.back();
     std::string pwd = get_current_dir_name();
-    std::string relative_path;
+    std::string relative_path = token.token;
 
-    if (partial.contains('/'))
+    if (token.token.ends_with('/'))
     {
-        relative_path = partial.substr(
-            0, partial.length() - (partial.length() - partial.rfind('/')));
-        pwd = std::format(
-            "{}/{}", pwd,
-            partial.substr(0, partial.length() -
-                                  (partial.length() - partial.rfind('/'))));
+        relative_path.pop_back();
     }
 
-    std::vector<std::string> files = get_files_from_dir(pwd, relative_path);
-    std::erase_if(files, [&partial](const std::string &file) {
-        return !file.starts_with(partial);
-    });
+    if (token.token.contains('/'))
+    {
+        pwd = std::format("{}/{}", pwd,
+                          token.token.substr(0, token.token.length() -
+                                                    (token.token.length() -
+                                                     token.token.rfind('/'))));
+        relative_path =
+            token.token.substr(token.token.rfind('/') + 1,
+                               token.token.length() - (token.token.length() -
+                                                       token.token.rfind('/')));
+    }
 
-    std::vector<std::string> dirs = get_subdirs_from_dir(pwd, relative_path);
+    std::vector<std::string> files = get_files_from_dir(pwd);
+    std::vector<std::string> dirs = get_subdirs_from_dir(pwd);
     files.insert(files.end(), dirs.begin(), dirs.end());
+    if (partial.back() != ' ')
+    {
+        std::erase_if(files, [&relative_path](const std::string &file) {
+            return !file.starts_with(relative_path);
+        });
+    }
 
     return files;
 }
 
 std::string Shell::LongestCommonPrefix(const std::string &partial) const
 {
-    std::string autocomplete = partial;
+    std::string token = partial;
+    size_t seperator_pos = token.rfind('/');
+    if (seperator_pos != std::string::npos)
+    {
+        token = token.substr(seperator_pos, token.length() - seperator_pos);
+    }
+    std::string autocomplete = token;
     size_t max_length =
         std::ranges::max_element(m_autocomplete, {}, &std::string::size)
             ->length();

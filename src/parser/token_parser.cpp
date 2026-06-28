@@ -100,7 +100,17 @@ TokenType TokenParser::DetermineTokenType(ParserState state,
         return TokenType::COMMAND;
     }
 
-    return TokenType::NORMAL;
+    if (buffer.contains('/'))
+    {
+        return TokenType::FILE_PATH;
+    }
+
+    if (buffer.ends_with('/'))
+    {
+        return TokenType::DIR_PATH;
+    }
+
+    return TokenType::TEXT;
 }
 
 ParserState TokenParser::DetermineState(const std::string &commandline,

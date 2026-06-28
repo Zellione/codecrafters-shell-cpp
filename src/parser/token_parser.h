@@ -20,7 +20,9 @@ enum class ParserState : std::uint8_t
 enum class TokenType : std::uint8_t
 {
     COMMAND,
-    NORMAL,
+    TEXT,
+    FILE_PATH,
+    DIR_PATH,
     REDIRECT_STDOUT,
     REDIRECT_STDDERR,
     REDIRECT_STDOUT_APPEND,

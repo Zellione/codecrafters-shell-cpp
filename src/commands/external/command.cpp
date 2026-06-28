@@ -43,8 +43,9 @@ bool ExternalCommand::Exec(const std::vector<Token> &tokens) const
         close(stdout_pipe[1]);
         close(stderr_pipe[1]);
 
-        std::array<TokenType, 2> applicableTypes{TokenType::NORMAL,
-                                                 TokenType::COMMAND};
+        std::array<TokenType, 4> applicableTypes{
+            TokenType::TEXT, TokenType::COMMAND, TokenType::FILE_PATH,
+            TokenType::DIR_PATH};
         // Build argv
         std::vector<char *> argv;
         for (const auto &token : tokens)

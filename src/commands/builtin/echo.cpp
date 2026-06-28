@@ -20,11 +20,10 @@ void EchoCommand::Process(const std::vector<Token> &tokens) const
             continue;
         }
 
-        if (tokens[i].type == TokenType::NORMAL)
+        if (tokens[i].type == TokenType::TEXT)
         {
             ss << tokens[i].token;
-            if (i < tokens.size() - 1 &&
-                tokens[i + 1].type == TokenType::NORMAL)
+            if (i < tokens.size() - 1 && tokens[i + 1].type == TokenType::TEXT)
             {
                 ss << " ";
             }

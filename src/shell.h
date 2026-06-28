@@ -15,7 +15,8 @@ class Shell
     Shell();
 
     [[nodiscard]] std::vector<std::string>
-    CollectAutocompletes(const std::string &partial);
+    CollectAutocompletes(const std::string &partial,
+                         const std::vector<Token> &tokens);
 
     static std::vector<std::string>
     CollectAutocompleteInPath(const std::string &partial);
@@ -23,8 +24,9 @@ class Shell
     [[nodiscard]] std::vector<std::string>
     CollectAutocompleteBuiltin(const std::string &partial) const;
 
-    [[nodiscard]] std::vector<std::string>
-    CollectAutocompleteInDir(const std::string &partial) const;
+    static std::vector<std::string>
+    CollectAutocompleteInDir(const std::string &partial,
+                             const std::vector<Token> &tokens);
 
     [[nodiscard]] std::string
     LongestCommonPrefix(const std::string &partial) const;
