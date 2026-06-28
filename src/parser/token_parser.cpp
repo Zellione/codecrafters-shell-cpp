@@ -9,6 +9,7 @@ std::vector<Token> TokenParser::Parse(const std::string &commandline)
     ParserState state = ParserState::NORMAL;
     std::string buffer;
     size_t pos = 0;
+    size_t last_start_pos = 0;
     while (pos < commandline.length())
     {
         state = DetermineState(commandline, pos, state);
@@ -62,7 +63,10 @@ std::vector<Token> TokenParser::Parse(const std::string &commandline)
         if (pos + 1 >= commandline.length() ||
             (commandline[pos] == ' ' && state != ParserState::ON_BACKSLASH))
         {
-            tokens.emplace_back(buffer, DetermineTokenType(state));
+            tokens.emplace_back(
+                buffer,
+                DetermineTokenType(state, commandline, buffer, last_start_pos));
+            last_start_pos = pos + 1;
             buffer = "";
         }
 
@@ -72,7 +76,10 @@ std::vector<Token> TokenParser::Parse(const std::string &commandline)
     return tokens;
 }
 
-TokenType TokenParser::DetermineTokenType(ParserState state)
+TokenType TokenParser::DetermineTokenType(ParserState state,
+                                          const std::string &commandline,
+                                          const std::string &buffer,
+                                          size_t start_pos)
 {
     switch (state)
     {
@@ -86,6 +93,11 @@ TokenType TokenParser::DetermineTokenType(ParserState state)
         return TokenType::REDIRECT_STDERR_APPEND;
     default:
         break;
+    }
+
+    if (start_pos == 0)
+    {
+        return TokenType::COMMAND;
     }
 
     return TokenType::NORMAL;

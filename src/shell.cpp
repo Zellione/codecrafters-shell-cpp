@@ -3,6 +3,7 @@
 #include "commands/builtin/exit.h"
 #include "commands/builtin/type.h"
 #include "commands/error/err_not_found.h"
+#include "helper/filesystem.h"
 #include "output/console_output.h"
 #include "output/redirect_stderr.h"
 #include "output/redirect_stdout.h"
@@ -12,6 +13,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <unistd.h>
 #include <vector>
 
 Shell::Shell() : m_external_comm(&m_output)
@@ -60,6 +62,7 @@ int Shell::TabAutoComplete(int count, int key)
     {
         return Shell::TabAutoCompleteMulti(count, key);
     }
+    std::vector<Token> tokens = TokenParser::Parse(rl_line_buffer);
 
     shell.m_autocomplete = shell.CollectAutocompletes(rl_line_buffer);
     shell.m_lastprompt = rl_line_buffer;
@@ -70,10 +73,22 @@ int Shell::TabAutoComplete(int count, int key)
         return 1;
     }
 
+    std::string newprompt = std::string(rl_line_buffer);
+    size_t pos = newprompt.rfind(' ');
+    if (pos == std::string::npos)
+    {
+        pos = 0;
+    }
+    else
+    {
+        pos++;
+    }
+
     if (shell.m_autocomplete.size() == 1)
     {
-        std::string command = shell.m_autocomplete[0] + " ";
-        rl_replace_line(command.c_str(), 0);
+        newprompt = newprompt.replace(pos, newprompt.length() - pos,
+                                      shell.m_autocomplete[0] + " ");
+        rl_replace_line(newprompt.c_str(), 0);
         rl_point = rl_end;
 
         return 0;
@@ -81,7 +96,10 @@ int Shell::TabAutoComplete(int count, int key)
 
     std::cout << '\x07';
 
-    rl_replace_line(shell.LongestCommonPrefix(rl_line_buffer).c_str(), 0);
+    newprompt =
+        newprompt.replace(pos, newprompt.length() - pos,
+                          shell.LongestCommonPrefix(tokens.back().token));
+    rl_replace_line(newprompt.c_str(), 0);
     rl_point = rl_end;
 
     return 0;
@@ -113,19 +131,74 @@ int Shell::TabAutoCompleteMulti(int count, int key)
     return 0;
 }
 
-std::vector<std::string>
-Shell::CollectAutocompletes(const std::string &partial) const
+std::vector<std::string> Shell::CollectAutocompletes(const std::string &partial)
 {
-    std::vector<std::string> commands = m_registry.AutoComplete(partial);
-    std::vector<std::string> ext_commands =
-        ExternalCommand::SearchExecutable(partial);
-    commands.insert(commands.end(), ext_commands.begin(), ext_commands.end());
+    std::vector<std::string> autocompletes;
 
-    std::ranges::sort(commands);
-    commands.erase(std::unique(commands.begin(), commands.end()),
-                   commands.end());
+    std::vector<Token> tokens = TokenParser::Parse(partial);
 
-    return commands;
+    if (tokens.empty())
+    {
+        return autocompletes;
+    }
+
+    const Token &token = tokens.back();
+    std::string current_token = token.token;
+    bool is_command = token.type == TokenType::COMMAND;
+
+    if (current_token.starts_with(m_lastprompt))
+    {
+        std::erase_if(m_autocomplete,
+                      [&current_token](const std::string &option) {
+                          return !option.starts_with(current_token);
+                      });
+    }
+
+    if (is_command)
+    {
+        // Collect commands
+        autocompletes = CollectAutocompleteBuiltin(current_token);
+        std::vector<std::string> ext_commands =
+            CollectAutocompleteInPath(current_token);
+        autocompletes.insert(autocompletes.end(), ext_commands.begin(),
+                             ext_commands.end());
+    }
+    else
+    {
+        // collect files
+        autocompletes = CollectAutocompleteInDir(current_token);
+    }
+
+    // Sort commands
+    std::ranges::sort(autocompletes);
+    autocompletes.erase(std::unique(autocompletes.begin(), autocompletes.end()),
+                        autocompletes.end());
+
+    return autocompletes;
+}
+
+std::vector<std::string>
+Shell::CollectAutocompleteInPath(const std::string &partial)
+{
+    return ExternalCommand::SearchExecutable(partial);
+}
+
+std::vector<std::string>
+Shell::CollectAutocompleteBuiltin(const std::string &partial) const
+{
+    return m_registry.AutoComplete(partial);
+}
+
+std::vector<std::string>
+Shell::CollectAutocompleteInDir(const std::string &partial) const
+{
+    std::string pwd = get_current_dir_name();
+    std::vector<std::string> files = get_files_from_dir(pwd);
+    std::erase_if(files, [&partial](const std::string &file) {
+        return !file.starts_with(partial);
+    });
+
+    return files;
 }
 
 std::string Shell::LongestCommonPrefix(const std::string &partial) const

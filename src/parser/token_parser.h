@@ -5,7 +5,8 @@
 #include <utility>
 #include <vector>
 
-enum class ParserState : std::uint8_t {
+enum class ParserState : std::uint8_t
+{
     NORMAL,
     INSIDE_SINGLE_QUOTES,
     INSIDE_DOUBLE_QUOTES,
@@ -16,7 +17,9 @@ enum class ParserState : std::uint8_t {
     REDIRECT_STDERR_APPEND
 };
 
-enum class TokenType : std::uint8_t {
+enum class TokenType : std::uint8_t
+{
+    COMMAND,
     NORMAL,
     REDIRECT_STDOUT,
     REDIRECT_STDDERR,
@@ -24,29 +27,38 @@ enum class TokenType : std::uint8_t {
     REDIRECT_STDERR_APPEND
 };
 
-struct Token {
+struct Token
+{
     Token(std::string token, TokenType type)
-        : token(std::move(token)), type(type) {}
+        : token(std::move(token)), type(type)
+    {
+    }
     std::string token;
     TokenType type;
 };
 
-struct InternalToken {
+struct InternalToken
+{
     InternalToken() : start_pos(0), end_pos(0) {}
     InternalToken(size_t start_pos, size_t end_pos, std::string buffer)
-        : start_pos(start_pos), end_pos(end_pos), buffer(std::move(buffer)) {}
+        : start_pos(start_pos), end_pos(end_pos), buffer(std::move(buffer))
+    {
+    }
     size_t start_pos;
     size_t end_pos;
     std::string buffer;
 };
 
-class TokenParser {
+class TokenParser
+{
   private:
     [[nodiscard]] static ParserState
     DetermineState(const std::string &commandline, size_t pos,
                    ParserState current);
 
-    [[nodiscard]] static TokenType DetermineTokenType(ParserState state);
+    [[nodiscard]] static TokenType
+    DetermineTokenType(ParserState state, const std::string &commandline,
+                       const std::string &buffer, size_t start_pos);
 
     [[nodiscard]] static InternalToken
     ParseInsideSingleQuotes(const std::string &commandline, size_t start_pos);

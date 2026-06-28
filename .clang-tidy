@@ -17,7 +17,7 @@ WarningsAsErrors: ''
 
 # Which headers get diagnostics. '.*' = all project headers.
 # Use something like '^(?!.*/(third_party|vendor)/).*' to skip vendored code.
-HeaderFilterRegex: '^(?!.*/vcpkg_installed/).*'
+HeaderFilterRegex: '^(?!.*/(vcpkg_installed)/).*'
 
 # Don't emit formatting fixes (leave that to clang-format / conform).
 FormatStyle: none
