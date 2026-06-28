@@ -193,7 +193,19 @@ std::vector<std::string>
 Shell::CollectAutocompleteInDir(const std::string &partial) const
 {
     std::string pwd = get_current_dir_name();
-    std::vector<std::string> files = get_files_from_dir(pwd);
+    std::string relative_path;
+
+    if (partial.contains('/'))
+    {
+        relative_path = partial.substr(
+            0, partial.length() - (partial.length() - partial.rfind('/')));
+        pwd = std::format(
+            "{}/{}", pwd,
+            partial.substr(0, partial.length() -
+                                  (partial.length() - partial.rfind('/'))));
+    }
+
+    std::vector<std::string> files = get_files_from_dir(pwd, relative_path);
     std::erase_if(files, [&partial](const std::string &file) {
         return !file.starts_with(partial);
     });
