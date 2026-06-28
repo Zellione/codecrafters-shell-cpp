@@ -81,6 +81,9 @@ int Shell::TabAutoComplete(int count, int key)
 
     std::cout << '\x07';
 
+    rl_replace_line(shell.LongestCommonPrefix(rl_line_buffer).c_str(), 0);
+    rl_point = rl_end;
+
     return 0;
 }
 
@@ -123,4 +126,38 @@ Shell::CollectAutocompletes(const std::string &partial) const
                    commands.end());
 
     return commands;
+}
+
+std::string Shell::LongestCommonPrefix(const std::string &partial) const
+{
+    std::string autocomplete = partial;
+    size_t max_length =
+        std::ranges::max_element(m_autocomplete, {}, &std::string::size)
+            ->length();
+    for (size_t pos = autocomplete.length(); pos < max_length; pos++)
+    {
+        char c = 0;
+        bool outer_break = false;
+        for (const auto &command : m_autocomplete)
+        {
+            if (command.length() <= pos)
+            {
+                return autocomplete;
+            }
+            if (c == 0)
+            {
+                c = command[pos];
+                continue;
+            }
+
+            if (command[pos] != c)
+            {
+                return autocomplete;
+            }
+        }
+
+        autocomplete += c;
+    }
+
+    return autocomplete;
 }

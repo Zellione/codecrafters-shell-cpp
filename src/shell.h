@@ -17,6 +17,9 @@ class Shell
     [[nodiscard]] std::vector<std::string>
     CollectAutocompletes(const std::string &partial) const;
 
+    [[nodiscard]] std::string
+    LongestCommonPrefix(const std::string &partial) const;
+
   public:
     static Shell &Instance()
     {
