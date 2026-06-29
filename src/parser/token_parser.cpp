@@ -18,28 +18,33 @@ std::vector<Token> TokenParser::Parse(const std::string &commandline)
         {
         case ParserState::INSIDE_SINGLE_QUOTES:
             tmp = ParseInsideSingleQuotes(commandline, pos);
-            buffer += tmp.buffer;
+            buffer += tmp.token;
             pos = tmp.end_pos;
             break;
         case ParserState::INSIDE_DOUBLE_QUOTES:
             tmp = ParseInsideDoubleQuotes(commandline, pos);
-            buffer += tmp.buffer;
+            buffer += tmp.token;
             pos = tmp.end_pos;
             break;
         case ParserState::ON_BACKSLASH:
-            buffer += ParsePreviousBackslash(commandline, pos).buffer;
+            buffer += ParsePreviousBackslash(commandline, pos).token;
             pos += 1;
             break;
         case ParserState::REDIRECT_STDOUT:
         case ParserState::REDIRECT_STDERR:
             tmp = ParseRedirect(commandline, pos);
-            buffer += tmp.buffer;
+            buffer += tmp.token;
             pos = tmp.end_pos;
             break;
         case ParserState::REDIRECT_STDOUT_APPEND:
         case ParserState::REDIRECT_STDERR_APPEND:
             tmp = ParseRedirect(commandline, pos + 1);
-            buffer += tmp.buffer;
+            buffer += tmp.token;
+            pos = tmp.end_pos;
+            break;
+        case ParserState::FLAG:
+            tmp = ParseFlag(commandline, pos);
+            buffer = tmp.token;
             pos = tmp.end_pos;
             break;
         case ParserState::NORMAL:
@@ -63,9 +68,9 @@ std::vector<Token> TokenParser::Parse(const std::string &commandline)
         if (pos + 1 >= commandline.length() ||
             (commandline[pos] == ' ' && state != ParserState::ON_BACKSLASH))
         {
-            tokens.emplace_back(
-                buffer,
-                DetermineTokenType(state, commandline, buffer, last_start_pos));
+            TokenType tokenType =
+                DetermineTokenType(state, commandline, buffer, last_start_pos);
+            tokens.emplace_back(buffer, tokenType);
             last_start_pos = pos + 1;
             buffer = "";
         }
@@ -91,6 +96,8 @@ TokenType TokenParser::DetermineTokenType(ParserState state,
         return TokenType::REDIRECT_STDOUT_APPEND;
     case ParserState::REDIRECT_STDERR_APPEND:
         return TokenType::REDIRECT_STDERR_APPEND;
+    case ParserState::FLAG:
+        return TokenType::FLAG;
     default:
         break;
     }
@@ -127,6 +134,10 @@ ParserState TokenParser::DetermineState(const std::string &commandline,
     if (commandline[pos] == '\\')
     {
         return ParserState::ON_BACKSLASH;
+    }
+    if (commandline[pos] == '-')
+    {
+        return ParserState::FLAG;
     }
     if ((commandline[pos] == '>' && commandline[pos + 1] == '>') ||
         (commandline[pos] == '1' && commandline[pos + 1] == '>' &&
@@ -221,4 +232,18 @@ InternalToken TokenParser::ParseRedirect(const std::string &commandline,
     ltrim(buffer);
 
     return {start_pos, pos, buffer};
+}
+
+InternalToken TokenParser::ParseFlag(const std::string &commandline,
+                                     size_t start_pos)
+{
+    size_t pos = start_pos;
+    size_t param_key_end = commandline.find(' ', pos);
+    if (param_key_end == std::string::npos)
+    {
+        param_key_end = commandline.length() - 1;
+    }
+    std::string key = commandline.substr(pos, param_key_end - pos);
+
+    return {start_pos, param_key_end, key};
 }

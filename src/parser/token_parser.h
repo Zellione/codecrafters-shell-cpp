@@ -10,6 +10,7 @@ enum class ParserState : std::uint8_t
     NORMAL,
     INSIDE_SINGLE_QUOTES,
     INSIDE_DOUBLE_QUOTES,
+    FLAG,
     ON_BACKSLASH,
     REDIRECT_STDOUT,
     REDIRECT_STDOUT_APPEND,
@@ -20,6 +21,7 @@ enum class ParserState : std::uint8_t
 enum class TokenType : std::uint8_t
 {
     COMMAND,
+    FLAG,
     TEXT,
     FILE_PATH,
     DIR_PATH,
@@ -43,12 +45,12 @@ struct InternalToken
 {
     InternalToken() : start_pos(0), end_pos(0) {}
     InternalToken(size_t start_pos, size_t end_pos, std::string buffer)
-        : start_pos(start_pos), end_pos(end_pos), buffer(std::move(buffer))
+        : start_pos(start_pos), end_pos(end_pos), token(std::move(buffer))
     {
     }
     size_t start_pos;
     size_t end_pos;
-    std::string buffer;
+    std::string token;
 };
 
 class TokenParser
@@ -73,6 +75,9 @@ class TokenParser
 
     [[nodiscard]] static InternalToken
     ParseRedirect(const std::string &commandline, size_t start_pos);
+
+    [[nodiscard]] static InternalToken ParseFlag(const std::string &commandline,
+                                                 size_t start_pos);
 
   public:
     TokenParser() = default;
