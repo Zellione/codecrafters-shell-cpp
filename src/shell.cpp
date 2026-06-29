@@ -1,4 +1,5 @@
 #include "shell.h"
+#include "commands/builtin/complete.h"
 #include "commands/builtin/echo.h"
 #include "commands/builtin/exit.h"
 #include "commands/builtin/type.h"
@@ -25,6 +26,7 @@ Shell::Shell() : m_external_comm(&m_output)
     m_registry.RegisterCommand(new EchoCommand(&m_output));
     m_registry.RegisterCommand(new ExitCommand(&m_output));
     m_registry.RegisterCommand(new TypeCommand(&m_registry, &m_output));
+    m_registry.RegisterCommand(new CompleteCommand(&m_output));
 }
 
 void Shell::run()
