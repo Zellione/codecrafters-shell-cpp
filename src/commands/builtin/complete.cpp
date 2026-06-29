@@ -4,28 +4,89 @@
 
 void CompleteCommand::Process(const std::vector<Token> &tokens) const
 {
-    std::string printFlag;
+    std::string name;
+    std::string completion;
+    bool flag_print = false;
+    bool flag_create = false;
 
     for (size_t i = 0; i < tokens.size(); i++)
     {
-        if (i == 0 || tokens[i - 1].type != TokenType::FLAG)
+        switch (tokens[i].type)
         {
-            continue;
-        }
+        case TokenType::FLAG:
+            // printFlag
+            if (tokens[i].token == "-p")
+            {
+                flag_print = true;
+            }
 
-        if (tokens[i - 1].token.starts_with("-p"))
-        {
-            printFlag = tokens[i].token;
+            // addFlag
+            if (tokens[i].token == "-C")
+            {
+                if (i >= tokens.size())
+                {
+                    continue;
+                }
+                flag_create = true;
+            }
+            break;
+        case TokenType::FILE_PATH:
+            completion = tokens[i].token;
+            break;
+        case TokenType::TEXT:
+            name = tokens[i].token;
+        default:
+            break;
         }
     }
 
-    m_output->Put(
-        tokens,
-        std::format("complete: {}: no completion specification\n", printFlag),
-        OutputTarget::STDERR);
+    if (flag_print)
+    {
+        Print(tokens, name);
+        return;
+    }
+
+    if (flag_create)
+    {
+        Create(name, completion);
+    }
 }
 
-CompleteCommand::CompleteCommand(Output *output)
-    : BuiltinCommand("complete", "complete is a shell builtin", output)
+void CompleteCommand::Print(const std::vector<Token> &tokens,
+                            const std::string &name) const
+{
+    if (!m_completeRegistry->Has(name))
+    {
+        m_output->Put(
+            tokens,
+            std::format("complete: {}: no completion specification\n", name),
+            OutputTarget::STDERR);
+
+        return;
+    }
+
+    m_output->Put(tokens,
+                  std::format("complete -C '{}' {}\n",
+                              m_completeRegistry->Get(name), name),
+                  OutputTarget::STDOUT);
+}
+
+bool CompleteCommand::Create(const std::string &name,
+                             const std::string &completion) const
+{
+    if (m_completeRegistry->Has(name))
+    {
+        return false;
+    }
+
+    m_completeRegistry->Add(name, completion);
+
+    return true;
+}
+
+CompleteCommand::CompleteCommand(Output *output,
+                                 CompleteRegistry *completeRegistry)
+    : BuiltinCommand("complete", "complete is a shell builtin", output),
+      m_completeRegistry(completeRegistry)
 {
 }

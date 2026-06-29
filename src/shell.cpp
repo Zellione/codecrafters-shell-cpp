@@ -23,10 +23,19 @@ Shell::Shell() : m_external_comm(&m_output)
     m_output.AddType(new RedirectStdErr());
     m_output.AddType(new ConsoleOutput());
 
+    m_completeRegistry = new CompleteRegistry();
+
     m_registry.RegisterCommand(new EchoCommand(&m_output));
     m_registry.RegisterCommand(new ExitCommand(&m_output));
     m_registry.RegisterCommand(new TypeCommand(&m_registry, &m_output));
-    m_registry.RegisterCommand(new CompleteCommand(&m_output));
+    m_registry.RegisterCommand(
+        new CompleteCommand(&m_output, m_completeRegistry));
+}
+
+Shell::~Shell()
+{
+    delete m_completeRegistry;
+    m_completeRegistry = nullptr;
 }
 
 void Shell::run()

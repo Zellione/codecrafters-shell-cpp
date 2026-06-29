@@ -1,5 +1,6 @@
 #include "commands/builtin/registry.h"
 #include "commands/external/command.h"
+#include "registries/complete.h"
 
 class Shell
 {
@@ -11,6 +12,8 @@ class Shell
 
     std::vector<std::string> m_autocomplete;
     std::string m_lastprompt;
+
+    CompleteRegistry *m_completeRegistry;
 
     Shell();
 
@@ -32,6 +35,8 @@ class Shell
     LongestCommonPrefix(const std::string &partial) const;
 
   public:
+    ~Shell();
+
     static Shell &Instance()
     {
         static Shell s;
