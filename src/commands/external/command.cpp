@@ -12,6 +12,7 @@
 ExternalCommand::ExternalCommand(Output *output) : m_Output(output) {}
 
 bool ExternalCommand::Exec(const std::vector<Token> &tokens,
+                           const std::vector<char *> &env_vars,
                            CmdResult *result_out) const
 {
     if (tokens.empty())
@@ -61,7 +62,21 @@ bool ExternalCommand::Exec(const std::vector<Token> &tokens,
         }
         argv.push_back(nullptr);
 
-        execvp(argv[0], argv.data());
+        if (!env_vars.empty())
+        {
+            execvpe(argv[0], argv.data(), env_vars.data());
+
+            for (char *env_var : env_vars)
+            {
+                free(env_var);
+            }
+        }
+        else
+        {
+
+            execvp(argv[0], argv.data());
+        }
+
         _exit(127); // exec failed
     }
 

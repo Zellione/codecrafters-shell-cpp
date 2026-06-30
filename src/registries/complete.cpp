@@ -1,68 +1,81 @@
 #include "complete.h"
+#include <cstring>
 #include <format>
 #include <ranges>
+
+using std::format;
+using std::string;
+using std::vector;
 
 CompleteRegistry::CompleteRegistry(ExternalCommand *externalCommand)
     : m_externalCommand(externalCommand)
 {
 }
 
-void CompleteRegistry::Add(const std::string &name,
-                           const std::string &completion)
+void CompleteRegistry::Add(const string &name, const string &completion)
 {
     m_completions.emplace(name, completion);
 }
 
-const std::string &CompleteRegistry::Get(const std::string &name) const
+const string &CompleteRegistry::Get(const std::string &name) const
 {
     return m_completions.find(name)->second;
 }
 
-bool CompleteRegistry::Has(const std::string &name) const
+bool CompleteRegistry::Has(const string &name) const
 {
     return m_completions.contains(name);
 }
 
-std::vector<std::string>
-CompleteRegistry::Autocomplete(const std::vector<Token> &tokens,
-                               const std::string &partial) const
+vector<string> CompleteRegistry::Autocomplete(const vector<Token> &tokens,
+                                              const string &partial) const
 {
     if (tokens.empty() || !Has(tokens[0].token))
     {
         return {};
     }
 
-    std::vector<Token> comp_tokens = BuildAutocompleteTokens(tokens, partial);
+    vector<Token> comp_tokens = BuildAutocompleteTokens(tokens, partial);
+    vector<char *> env_vars = BuildEnvVars(tokens, partial);
 
+    vector<string> autocompletions;
     CmdResult result;
-    if (m_externalCommand->Exec(comp_tokens, &result))
+    if (m_externalCommand->Exec(comp_tokens, env_vars, &result))
     {
         if (result.stdout_output.ends_with('\n'))
         {
             result.stdout_output.pop_back();
         }
         auto parts = result.stdout_output | std::views::split('\n');
-        std::vector<std::string> autocompletions =
-            parts | std::ranges::to<std::vector<std::string>>();
-
-        return autocompletions;
+        autocompletions = parts | std::ranges::to<vector<string>>();
     }
 
-    return {};
+    return autocompletions;
 }
 
-std::vector<Token>
-CompleteRegistry::BuildAutocompleteTokens(const std::vector<Token> &tokens,
-                                          const std::string &partial) const
+vector<Token>
+CompleteRegistry::BuildAutocompleteTokens(const vector<Token> &tokens,
+                                          const string &partial) const
 {
-    const std::string &completion_script = Get(tokens[0].token);
+    const string &completion_script = Get(tokens[0].token);
 
-    std::vector<Token> comp_tokens = TokenParser::Parse(completion_script);
+    vector<Token> comp_tokens = TokenParser::Parse(completion_script);
 
-    std::string complete_comm =
+    string complete_comm =
         std::format(R"({} "{}" "{}" "{}")", completion_script, tokens[0].token,
                     tokens.empty() ? "" : tokens.back().token,
                     tokens.size() > 2 ? tokens[tokens.size() - 2].token : "");
 
     return TokenParser::Parse(complete_comm);
+}
+
+vector<char *> CompleteRegistry::BuildEnvVars(const vector<Token> &tokens,
+                                              const string &partial) const
+{
+    vector<char *> env;
+    env.push_back(strdup(format("COMP_LINE={}", partial).c_str()));
+    env.push_back(strdup(format("COMP_POINT={}", partial.length()).c_str()));
+    env.push_back(nullptr);
+
+    return env;
 }

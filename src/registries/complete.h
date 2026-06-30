@@ -14,7 +14,9 @@ class CompleteRegistry
     [[nodiscard]] std::vector<Token>
     BuildAutocompleteTokens(const std::vector<Token> &tokens,
                             const std::string &partial) const;
-
+    [[nodiscard]] std::vector<char *>
+    BuildEnvVars(const std::vector<Token> &tokens,
+                 const std::string &partial) const;
     ExternalCommand *m_externalCommand;
 
   public:

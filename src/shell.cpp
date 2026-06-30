@@ -54,7 +54,7 @@ void Shell::run()
             continue;
         }
 
-        bool ext_command = m_external_comm.Exec(tokens);
+        bool ext_command = m_external_comm.Exec(tokens, {});
         if (ext_command)
         {
             continue;

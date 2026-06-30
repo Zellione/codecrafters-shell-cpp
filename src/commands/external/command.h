@@ -23,6 +23,7 @@ class ExternalCommand
   public:
     ExternalCommand(Output *output);
     [[nodiscard]] bool Exec(const std::vector<Token> &tokens,
+                            const std::vector<char *> &env_vars,
                             CmdResult *result_out = nullptr) const;
 
     static void ReadPipes(int stdout_fd, int stderr_fd, CmdResult &result);
