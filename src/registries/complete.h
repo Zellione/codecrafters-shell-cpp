@@ -11,6 +11,10 @@ class CompleteRegistry
   private:
     std::map<std::string, std::string> m_completions;
 
+    [[nodiscard]] std::vector<Token>
+    BuildAutocompleteTokens(const std::vector<Token> &tokens,
+                            const std::string &partial) const;
+
     ExternalCommand *m_externalCommand;
 
   public:
