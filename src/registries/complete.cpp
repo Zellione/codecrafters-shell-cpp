@@ -17,6 +17,11 @@ void CompleteRegistry::Add(const string &name, const string &completion)
     m_completions.emplace(name, completion);
 }
 
+void CompleteRegistry::Remove(const std::string &name)
+{
+    m_completions.erase(name);
+}
+
 const string &CompleteRegistry::Get(const std::string &name) const
 {
     return m_completions.find(name)->second;

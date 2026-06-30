@@ -8,6 +8,7 @@ void CompleteCommand::Process(const std::vector<Token> &tokens) const
     std::string completion;
     bool flag_print = false;
     bool flag_create = false;
+    bool flag_remove = false;
 
     for (size_t i = 0; i < tokens.size(); i++)
     {
@@ -29,6 +30,12 @@ void CompleteCommand::Process(const std::vector<Token> &tokens) const
                 }
                 flag_create = true;
             }
+
+            // removeFlag
+            if (tokens[i].token == "-r")
+            {
+                flag_remove = true;
+            }
             break;
         case TokenType::FILE_PATH:
             completion = tokens[i].token;
@@ -37,6 +44,14 @@ void CompleteCommand::Process(const std::vector<Token> &tokens) const
             name = tokens[i].token;
         default:
             break;
+        }
+    }
+
+    if (flag_remove)
+    {
+        if (m_completeRegistry->Has(name))
+        {
+            m_completeRegistry->Remove(name);
         }
     }
 

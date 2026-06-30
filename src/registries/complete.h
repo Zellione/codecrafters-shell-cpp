@@ -23,6 +23,7 @@ class CompleteRegistry
     CompleteRegistry(ExternalCommand *externalCommand);
 
     void Add(const std::string &name, const std::string &completion);
+    void Remove(const std::string &name);
     [[nodiscard]] const std::string &Get(const std::string &name) const;
     [[nodiscard]] bool Has(const std::string &name) const;
 
