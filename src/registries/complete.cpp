@@ -64,7 +64,7 @@ CompleteRegistry::BuildAutocompleteTokens(const vector<Token> &tokens,
     string complete_comm =
         std::format(R"({} "{}" "{}" "{}")", completion_script, tokens[0].token,
                     tokens.empty() ? "" : tokens.back().token,
-                    tokens.size() > 2 ? tokens[tokens.size() - 2].token : "");
+                    tokens.size() > 1 ? tokens[tokens.size() - 2].token : "");
 
     return TokenParser::Parse(complete_comm);
 }
