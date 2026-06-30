@@ -2,16 +2,25 @@
 
 #include <map>
 #include <string>
+#include <vector>
+
+#include "../commands/external/command.h"
 
 class CompleteRegistry
 {
   private:
     std::map<std::string, std::string> m_completions;
 
+    ExternalCommand *m_externalCommand;
+
   public:
-    CompleteRegistry() = default;
+    CompleteRegistry(ExternalCommand *externalCommand);
 
     void Add(const std::string &name, const std::string &completion);
     [[nodiscard]] const std::string &Get(const std::string &name) const;
     [[nodiscard]] bool Has(const std::string &name) const;
+
+    [[nodiscard]] std::vector<std::string>
+    Autocomplete(const std::vector<Token> &tokens,
+                 const std::string &partial) const;
 };

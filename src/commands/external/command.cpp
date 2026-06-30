@@ -11,7 +11,8 @@
 
 ExternalCommand::ExternalCommand(Output *output) : m_Output(output) {}
 
-bool ExternalCommand::Exec(const std::vector<Token> &tokens) const
+bool ExternalCommand::Exec(const std::vector<Token> &tokens,
+                           CmdResult *result_out) const
 {
     if (tokens.empty())
     {
@@ -71,8 +72,15 @@ bool ExternalCommand::Exec(const std::vector<Token> &tokens) const
     CmdResult result;
     ReadPipes(stdout_pipe[0], stderr_pipe[0], result);
 
-    m_Output->Put(tokens, result.stdout_output, OutputTarget::STDOUT);
-    m_Output->Put(tokens, result.stderr_output, OutputTarget::STDERR);
+    if (result_out == nullptr)
+    {
+        m_Output->Put(tokens, result.stdout_output, OutputTarget::STDOUT);
+        m_Output->Put(tokens, result.stderr_output, OutputTarget::STDERR);
+    }
+    else
+    {
+        result_out->Fill(result);
+    }
 
     int status;
     waitpid(pid, &status, 0);

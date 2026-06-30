@@ -9,6 +9,7 @@
 #include "output/redirect_stderr.h"
 #include "output/redirect_stdout.h"
 #include "readline/readline.h"
+#include "registries/complete.h"
 
 #include <algorithm>
 #include <iostream>
@@ -23,7 +24,7 @@ Shell::Shell() : m_external_comm(&m_output)
     m_output.AddType(new RedirectStdErr());
     m_output.AddType(new ConsoleOutput());
 
-    m_completeRegistry = new CompleteRegistry();
+    m_completeRegistry = new CompleteRegistry(&m_external_comm);
 
     m_registry.RegisterCommand(new EchoCommand(&m_output));
     m_registry.RegisterCommand(new ExitCommand(&m_output));
@@ -191,8 +192,17 @@ Shell::CollectAutocompletes(const std::string &partial,
     }
     else
     {
-        // collect files
-        autocompletes = CollectAutocompleteInDir(partial, tokens);
+        // collect complete builtin autocomplete
+        autocompletes = m_completeRegistry->Autocomplete(tokens, partial);
+
+        if (autocompletes.empty())
+        {
+            // collect files
+            std::vector<std::string> files =
+                CollectAutocompleteInDir(partial, tokens);
+            autocompletes.insert(autocompletes.end(), files.begin(),
+                                 files.end());
+        }
     }
 
     // Sort commands
