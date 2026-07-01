@@ -47,6 +47,11 @@ std::vector<Token> TokenParser::Parse(const std::string &commandline)
             buffer = tmp.token;
             pos = tmp.end_pos;
             break;
+        case ParserState::BACKGROUND_JOB:
+            tmp = ParseBackgroundJob(commandline, pos);
+            buffer = tmp.token;
+            pos = tmp.end_pos;
+            break;
         case ParserState::NORMAL:
         default:
             if (commandline[pos] != ' ')
@@ -116,6 +121,10 @@ TokenType TokenParser::DetermineTokenType(ParserState state,
     {
         return TokenType::DIR_PATH;
     }
+    if (buffer == "&")
+    {
+        return TokenType::BACKGROUND_JOB;
+    }
 
     return TokenType::TEXT;
 }
@@ -158,6 +167,10 @@ ParserState TokenParser::DetermineState(const std::string &commandline,
     if (commandline[pos] == '2' && commandline[pos + 1] == '>')
     {
         return ParserState::REDIRECT_STDERR;
+    }
+    if (commandline[pos] == '&' && pos == commandline.length() - 1)
+    {
+        return ParserState::BACKGROUND_JOB;
     }
 
     return ParserState::NORMAL;
@@ -246,4 +259,20 @@ InternalToken TokenParser::ParseFlag(const std::string &commandline,
     std::string key = commandline.substr(pos, param_key_end - pos);
 
     return {start_pos, param_key_end, key};
+}
+
+InternalToken TokenParser::ParseBackgroundJob(const std::string &commandline,
+                                              size_t start_pos)
+{
+    std::string key = commandline.substr(start_pos, 1);
+    size_t pos = start_pos;
+    for (; pos < commandline.length(); pos++)
+    {
+        if (commandline[pos] == ' ')
+        {
+            pos++;
+        }
+    }
+
+    return {start_pos, pos, key};
 }

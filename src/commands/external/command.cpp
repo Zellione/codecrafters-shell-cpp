@@ -9,12 +9,17 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-ExternalCommand::ExternalCommand(Output *output) : m_Output(output) {}
+ExternalCommand::ExternalCommand(Output *output, JobsRegistry *registry)
+    : m_output(output), m_registry(registry)
+{
+}
 
 bool ExternalCommand::Exec(const std::vector<Token> &tokens,
                            const std::vector<char *> &env_vars,
                            CmdResult *result_out) const
 {
+    bool execInBackground = HasBackgroundFlag(tokens);
+
     if (tokens.empty())
     {
         return false;
@@ -85,22 +90,33 @@ bool ExternalCommand::Exec(const std::vector<Token> &tokens,
     close(stderr_pipe[1]);
 
     CmdResult result;
-    ReadPipes(stdout_pipe[0], stderr_pipe[0], result);
-
-    if (result_out == nullptr)
+    if (!execInBackground)
     {
-        m_Output->Put(tokens, result.stdout_output, OutputTarget::STDOUT);
-        m_Output->Put(tokens, result.stderr_output, OutputTarget::STDERR);
+        ReadPipes(stdout_pipe[0], stderr_pipe[0], result);
+
+        if (result_out == nullptr)
+        {
+            m_output->Put(tokens, result.stdout_output, OutputTarget::STDOUT);
+            m_output->Put(tokens, result.stderr_output, OutputTarget::STDERR);
+        }
+        else
+        {
+            result_out->Fill(result);
+        }
+    }
+
+    if (execInBackground)
+    {
+        unsigned int job_number = m_registry->Add(pid);
+        m_output->Put(tokens, std::format("[{}] {}\n", job_number, pid),
+                      OutputTarget::STDOUT);
     }
     else
     {
-        result_out->Fill(result);
+        int status;
+        waitpid(pid, &status, 0);
+        result.exit_code = WIFEXITED(status) ? WEXITSTATUS(status) : -1;
     }
-
-    int status;
-    waitpid(pid, &status, 0);
-
-    result.exit_code = WIFEXITED(status) ? WEXITSTATUS(status) : -1;
 
     return true;
 }
@@ -195,4 +211,9 @@ ExternalCommand::SearchExecutable(const std::string &partial)
     }
 
     return commands;
+}
+
+bool ExternalCommand::HasBackgroundFlag(const std::vector<Token> &tokens)
+{
+    return tokens.back().type == TokenType::BACKGROUND_JOB;
 }

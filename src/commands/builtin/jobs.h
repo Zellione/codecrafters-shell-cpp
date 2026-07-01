@@ -1,12 +1,15 @@
 #pragma once
 
+#include "../../registries/jobs.h"
 #include "command.h"
 
 class JobsCommand : public BuiltinCommand
 {
   private:
+    JobsRegistry &m_registry;
+
     void Process(const std::vector<Token> &tokens) const override;
 
   public:
-    JobsCommand(Output *output);
+    JobsCommand(Output *output, JobsRegistry &registry);
 };

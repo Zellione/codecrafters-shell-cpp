@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../output/output.h"
+#include "../../registries/jobs.h"
 
 struct CmdResult
 {
@@ -18,10 +19,14 @@ struct CmdResult
 class ExternalCommand
 {
   private:
-    Output *m_Output;
+    Output *m_output;
+    JobsRegistry *m_registry;
+
+    [[nodiscard]] static bool
+    HasBackgroundFlag(const std::vector<Token> &tokens);
 
   public:
-    ExternalCommand(Output *output);
+    ExternalCommand(Output *output, JobsRegistry *registry);
     [[nodiscard]] bool Exec(const std::vector<Token> &tokens,
                             const std::vector<char *> &env_vars,
                             CmdResult *result_out = nullptr) const;

@@ -15,7 +15,8 @@ enum class ParserState : std::uint8_t
     REDIRECT_STDOUT,
     REDIRECT_STDOUT_APPEND,
     REDIRECT_STDERR,
-    REDIRECT_STDERR_APPEND
+    REDIRECT_STDERR_APPEND,
+    BACKGROUND_JOB
 };
 
 enum class TokenType : std::uint8_t
@@ -28,7 +29,8 @@ enum class TokenType : std::uint8_t
     REDIRECT_STDOUT,
     REDIRECT_STDDERR,
     REDIRECT_STDOUT_APPEND,
-    REDIRECT_STDERR_APPEND
+    REDIRECT_STDERR_APPEND,
+    BACKGROUND_JOB
 };
 
 struct Token
@@ -78,6 +80,9 @@ class TokenParser
 
     [[nodiscard]] static InternalToken ParseFlag(const std::string &commandline,
                                                  size_t start_pos);
+
+    [[nodiscard]] static InternalToken
+    ParseBackgroundJob(const std::string &commandline, size_t start_pos);
 
   public:
     TokenParser() = default;

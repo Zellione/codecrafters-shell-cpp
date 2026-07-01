@@ -19,18 +19,19 @@
 #include <unistd.h>
 #include <vector>
 
-Shell::Shell() : m_external_comm(&m_output)
+Shell::Shell()
+    : m_externalComm(&m_output, m_jobsRegistry),
+      m_jobsRegistry(new JobsRegistry()),
+      m_completeRegistry(new CompleteRegistry(&m_externalComm))
 {
     m_output.AddType(new RedirectStdOut());
     m_output.AddType(new RedirectStdErr());
     m_output.AddType(new ConsoleOutput());
 
-    m_completeRegistry = new CompleteRegistry(&m_external_comm);
-
     m_registry.RegisterCommand(new EchoCommand(&m_output));
     m_registry.RegisterCommand(new ExitCommand(&m_output));
     m_registry.RegisterCommand(new TypeCommand(&m_registry, &m_output));
-    m_registry.RegisterCommand(new JobsCommand(&m_output));
+    m_registry.RegisterCommand(new JobsCommand(&m_output, *m_jobsRegistry));
     m_registry.RegisterCommand(
         new CompleteCommand(&m_output, m_completeRegistry));
 }
@@ -39,6 +40,9 @@ Shell::~Shell()
 {
     delete m_completeRegistry;
     m_completeRegistry = nullptr;
+
+    delete m_jobsRegistry;
+    m_jobsRegistry = nullptr;
 }
 
 void Shell::run()
@@ -56,7 +60,7 @@ void Shell::run()
             continue;
         }
 
-        bool ext_command = m_external_comm.Exec(tokens, {});
+        bool ext_command = m_externalComm.Exec(tokens, {});
         if (ext_command)
         {
             continue;

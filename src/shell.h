@@ -1,18 +1,21 @@
 #include "commands/builtin/registry.h"
 #include "commands/external/command.h"
 #include "registries/complete.h"
+#include "registries/jobs.h"
 
 class Shell
 {
   private:
     BuiltinRegistry m_registry;
     Output m_output;
-    ExternalCommand m_external_comm;
-    std::string m_current_input;
+    std::string m_currentInput;
 
     std::vector<std::string> m_autocomplete;
     std::string m_lastprompt;
 
+    JobsRegistry *m_jobsRegistry;
+
+    ExternalCommand m_externalComm;
     CompleteRegistry *m_completeRegistry;
 
     Shell();
