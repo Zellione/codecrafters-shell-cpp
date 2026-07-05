@@ -8,7 +8,7 @@ class JobsCommand : public BuiltinCommand
   private:
     JobsRegistry &m_registry;
 
-    void Process(const std::vector<Token> &tokens) const override;
+    [[nodiscard]] int Process(const std::vector<Token> &tokens) const override;
 
   public:
     JobsCommand(Output *output, JobsRegistry &registry);

@@ -1,18 +1,15 @@
 #include "jobs.h"
 
-unsigned int JobsRegistry::Add(unsigned int pid)
+unsigned int JobsRegistry::Add(BackgroundJob job)
 {
     unsigned int job_number = m_jobs.empty() ? 1 : m_jobs.crbegin()->first + 1;
-    m_jobs.emplace(job_number, pid);
+    m_jobs.emplace(job_number, job);
 
     return job_number;
 }
-unsigned int JobsRegistry::Get(unsigned int job_number) const
+BackgroundJob &JobsRegistry::Get(unsigned int job_number)
 {
     return m_jobs.find(job_number)->second;
 }
 
-const std::map<unsigned int, unsigned int> &JobsRegistry::GetAll() const
-{
-    return m_jobs;
-}
+std::map<unsigned int, BackgroundJob> &JobsRegistry::GetAll() { return m_jobs; }

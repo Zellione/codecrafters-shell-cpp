@@ -7,4 +7,4 @@ JobsCommand::JobsCommand(Output *output, JobsRegistry &registry)
 {
 }
 
-void JobsCommand::Process(const std::vector<Token> &tokens) const {}
+int JobsCommand::Process(const std::vector<Token> &tokens) const { return 0; }

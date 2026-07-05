@@ -6,6 +6,7 @@
 #include "commands/builtin/type.h"
 #include "commands/error/err_not_found.h"
 #include "helper/filesystem.h"
+#include "output/console_error.h"
 #include "output/console_output.h"
 #include "output/redirect_stderr.h"
 #include "output/redirect_stdout.h"
@@ -13,77 +14,108 @@
 #include "registries/complete.h"
 
 #include <algorithm>
+#include <fcntl.h>
 #include <iostream>
+#include <ranges>
 #include <sstream>
 #include <string>
+#include <sys/wait.h>
 #include <unistd.h>
 #include <vector>
 
+using std::string;
+using std::vector;
+
 Shell::Shell()
-    : m_externalComm(&m_output, m_jobsRegistry),
-      m_jobsRegistry(new JobsRegistry()),
-      m_completeRegistry(new CompleteRegistry(&m_externalComm))
+    : m_external_comm(&m_output, m_jobs_registry),
+      m_jobs_registry(new JobsRegistry()),
+      m_complete_registry(new CompleteRegistry(&m_external_comm)),
+      m_line_ready(false), m_exit_shell(false), m_main_process(true)
 {
     m_output.AddType(new RedirectStdOut());
     m_output.AddType(new RedirectStdErr());
     m_output.AddType(new ConsoleOutput());
+    m_output.AddType(new ConsoleError());
 
     m_registry.RegisterCommand(new EchoCommand(&m_output));
     m_registry.RegisterCommand(new ExitCommand(&m_output));
     m_registry.RegisterCommand(new TypeCommand(&m_registry, &m_output));
-    m_registry.RegisterCommand(new JobsCommand(&m_output, *m_jobsRegistry));
+    m_registry.RegisterCommand(new JobsCommand(&m_output, *m_jobs_registry));
     m_registry.RegisterCommand(
-        new CompleteCommand(&m_output, m_completeRegistry));
+        new CompleteCommand(&m_output, m_complete_registry));
 }
 
 Shell::~Shell()
 {
-    delete m_completeRegistry;
-    m_completeRegistry = nullptr;
+    delete m_complete_registry;
+    m_complete_registry = nullptr;
 
-    delete m_jobsRegistry;
-    m_jobsRegistry = nullptr;
+    delete m_jobs_registry;
+    m_jobs_registry = nullptr;
 }
 
 void Shell::run()
 {
-    const char *user_input;
-    while ((user_input = readline("$ ")) != nullptr)
+    while (!m_exit_shell)
     {
-        std::vector<Token> tokens = TokenParser::Parse(user_input);
-
-        const BuiltinCommand *command = m_registry.FindCommand(tokens);
-        if (command != nullptr)
+        rl_callback_handler_install("$ ", Shell::LineHandler);
+        while (!m_line_ready)
         {
-            command->Execute(tokens);
+            fd_set fds;
+            FD_ZERO(&fds);
+            FD_SET(STDIN_FILENO, &fds);
 
-            continue;
+            struct timeval timeout{.tv_sec = 0, .tv_usec = 100000}; // 100ms
+            int ret =
+                select(STDIN_FILENO + 1, &fds, nullptr, nullptr, &timeout);
+
+            if (ret > 0 && FD_ISSET(STDIN_FILENO, &fds))
+            {
+                rl_callback_read_char(); // feeds readline one keystroke at a
+                                         // time
+            }
+
+            ReapBackgroundJobs();
         }
 
-        bool ext_command = m_externalComm.Exec(tokens, {});
-        if (ext_command)
+        vector<Token> tokens = TokenParser::Parse(m_current_input);
+        vector<vector<Token>> commands = SplitCommandChain(tokens);
+        int status = -1;
+        if (HasBackgroundFlag(tokens))
         {
-            continue;
+            status = ExecuteBackgroundCommandChain(commands);
+        }
+        else
+        {
+            status = ExecuteCommandChain(commands);
         }
 
-        ErrorNotFound::Raise(tokens);
+        if (status != 0)
+        {
+            ErrorNotFound::Raise(tokens);
+        }
 
-        delete user_input;
+        m_last_prompt = m_current_input;
+        m_current_input.clear();
+        m_line_ready = false;
     }
+
+    rl_callback_handler_remove();
 }
 
 int Shell::TabAutoComplete(int count, int key)
 {
     Shell &shell = Shell::Instance();
 
-    if (rl_line_buffer == shell.m_lastprompt && shell.m_autocomplete.size() > 1)
+    if (rl_line_buffer == shell.m_last_prompt &&
+        shell.m_autocomplete.size() > 1)
     {
         return Shell::TabAutoCompleteMulti(count, key);
     }
-    std::vector<Token> tokens = TokenParser::Parse(rl_line_buffer);
+    vector<Token> tokens = TokenParser::Parse(rl_line_buffer);
 
     shell.m_autocomplete = shell.CollectAutocompletes(rl_line_buffer, tokens);
-    shell.m_lastprompt = rl_line_buffer;
+    shell.m_last_prompt = rl_line_buffer;
 
     if (shell.m_autocomplete.empty())
     {
@@ -142,7 +174,7 @@ int Shell::TabAutoCompleteMulti(int count, int key)
 {
     Shell &shell = Shell::Instance();
 
-    std::vector<Token> tokens{};
+    vector<Token> tokens{};
     if (shell.m_autocomplete.size() > 1)
     {
         std::ostringstream oss;
@@ -164,11 +196,10 @@ int Shell::TabAutoCompleteMulti(int count, int key)
     return 0;
 }
 
-std::vector<std::string>
-Shell::CollectAutocompletes(const std::string &partial,
-                            const std::vector<Token> &tokens)
+vector<std::string> Shell::CollectAutocompletes(const std::string &partial,
+                                                const vector<Token> &tokens)
 {
-    std::vector<std::string> autocompletes;
+    vector<std::string> autocompletes;
 
     if (tokens.empty())
     {
@@ -179,7 +210,7 @@ Shell::CollectAutocompletes(const std::string &partial,
     std::string current_token = token.token;
     bool is_command = token.type == TokenType::COMMAND && partial.back() != ' ';
 
-    if (current_token.starts_with(m_lastprompt) && partial.back() != ' ')
+    if (current_token.starts_with(m_last_prompt) && partial.back() != ' ')
     {
         std::erase_if(m_autocomplete,
                       [&current_token](const std::string &option) {
@@ -191,7 +222,7 @@ Shell::CollectAutocompletes(const std::string &partial,
     {
         // Collect commands
         autocompletes = CollectAutocompleteBuiltin(current_token);
-        std::vector<std::string> ext_commands =
+        vector<std::string> ext_commands =
             CollectAutocompleteInPath(current_token);
         autocompletes.insert(autocompletes.end(), ext_commands.begin(),
                              ext_commands.end());
@@ -199,12 +230,12 @@ Shell::CollectAutocompletes(const std::string &partial,
     else
     {
         // collect complete builtin autocomplete
-        autocompletes = m_completeRegistry->Autocomplete(tokens, partial);
+        autocompletes = m_complete_registry->Autocomplete(tokens, partial);
 
         if (autocompletes.empty())
         {
             // collect files
-            std::vector<std::string> files =
+            vector<std::string> files =
                 CollectAutocompleteInDir(partial, tokens);
             autocompletes.insert(autocompletes.end(), files.begin(),
                                  files.end());
@@ -220,21 +251,19 @@ Shell::CollectAutocompletes(const std::string &partial,
     return autocompletes;
 }
 
-std::vector<std::string>
-Shell::CollectAutocompleteInPath(const std::string &partial)
+vector<std::string> Shell::CollectAutocompleteInPath(const std::string &partial)
 {
     return ExternalCommand::SearchExecutable(partial);
 }
 
-std::vector<std::string>
+vector<std::string>
 Shell::CollectAutocompleteBuiltin(const std::string &partial) const
 {
     return m_registry.AutoComplete(partial);
 }
 
-std::vector<std::string>
-Shell::CollectAutocompleteInDir(const std::string &partial,
-                                const std::vector<Token> &tokens)
+vector<std::string> Shell::CollectAutocompleteInDir(const std::string &partial,
+                                                    const vector<Token> &tokens)
 {
     const Token &token = tokens.back();
     std::string pwd = get_current_dir_name();
@@ -257,8 +286,8 @@ Shell::CollectAutocompleteInDir(const std::string &partial,
                                                        token.token.rfind('/')));
     }
 
-    std::vector<std::string> files = get_files_from_dir(pwd);
-    std::vector<std::string> dirs = get_subdirs_from_dir(pwd);
+    vector<std::string> files = get_files_from_dir(pwd);
+    vector<std::string> dirs = get_subdirs_from_dir(pwd);
     files.insert(files.end(), dirs.begin(), dirs.end());
     if (partial.back() != ' ')
     {
@@ -309,3 +338,202 @@ std::string Shell::LongestCommonPrefix(const std::string &partial) const
 
     return autocomplete;
 }
+
+int Shell::ReapBackgroundJobs()
+{
+    Shell &shell = Shell::Instance();
+    if (!shell.m_main_process)
+    {
+        return 0;
+    }
+
+    std::map<unsigned int, BackgroundJob> &background_jobs =
+        shell.m_jobs_registry->GetAll();
+
+    for (auto it = background_jobs.begin(); it != background_jobs.end();)
+    {
+        BackgroundJob &background_job = it->second;
+        int status;
+        pid_t result = waitpid(background_job.pid, &status, WNOHANG);
+
+        if (result == 0)
+        {
+            it++;
+            continue;
+        }
+
+        string output;
+        string error;
+
+        std::array<char, 4096> buffer;
+        ssize_t n;
+
+        while ((n = read(background_job.read_fd_out, buffer.begin(),
+                         sizeof(buffer.begin()))) > 0)
+        {
+            output.append(buffer.begin(), n);
+        }
+        close(background_job.read_fd_out);
+        while ((n = read(background_job.read_fd_err, buffer.begin(),
+                         sizeof(buffer.begin()))) > 0)
+        {
+            error.append(buffer.begin(), n);
+        }
+        close(background_job.read_fd_err);
+
+        it = background_jobs.erase(it);
+
+        shell.m_output.Put({}, output, OutputTarget::STDOUT);
+        shell.m_output.Put({}, error, OutputTarget::STDERR);
+    }
+
+    return 0;
+}
+
+void Shell::LineHandler(char *line)
+{
+    Shell &shell = Shell::Instance();
+
+    if (line != nullptr)
+    {
+        shell.m_current_input = line;
+        free(line);
+    }
+
+    shell.m_line_ready = true;
+    rl_callback_handler_remove();
+}
+
+int Shell::ExecuteCommand(const vector<Token> &command) const
+{
+    const BuiltinCommand *builtin_command = m_registry.FindCommand(command);
+    if (builtin_command != nullptr)
+    {
+        return builtin_command->Execute(command);
+    }
+
+    return m_external_comm.Exec(command, {});
+}
+
+int Shell::ExecuteCommandChain(const vector<vector<Token>> &commands) const
+{
+    if (commands.empty())
+    {
+        return -1;
+    }
+
+    for (const auto &command : commands)
+    {
+        int status = ExecuteCommand(command);
+
+        if (status != 0)
+        {
+            return status;
+        }
+    }
+
+    return 0;
+}
+
+int Shell::ExecuteBackgroundCommandChain(const vector<vector<Token>> &commands)
+{
+    if (commands.empty())
+    {
+        return -1;
+    }
+
+    std::array<int, 2> stdout_pipe;
+    std::array<int, 2> stderr_pipe;
+    pipe(stdout_pipe.data());
+    pipe(stderr_pipe.data());
+
+    int flags_stdout = fcntl(stdout_pipe[0], F_GETFL, 0);
+    int flags_stderr = fcntl(stderr_pipe[0], F_GETFL, 0);
+    fcntl(stdout_pipe[0], F_SETFL, flags_stdout | O_NONBLOCK);
+    fcntl(stderr_pipe[0], F_SETFL, flags_stderr | O_NONBLOCK);
+
+    pid_t pid = fork();
+
+    if (pid == 0)
+    {
+        // Child process
+        m_main_process = false;
+
+        close(stdout_pipe[0]);
+        close(stderr_pipe[0]);
+
+        dup2(stdout_pipe[1], STDOUT_FILENO);
+        dup2(stderr_pipe[1], STDERR_FILENO);
+
+        close(stdout_pipe[1]);
+        close(stderr_pipe[1]);
+
+        for (size_t i = 0; i + 1 < commands.size(); i++)
+        {
+            int status = ExecuteCommand(commands[i]);
+            if (status != 0)
+            {
+                _exit(status);
+            }
+        }
+
+        const vector<Token> &last = commands.back();
+        m_external_comm.ExecCommand(last);
+
+        _exit(127);
+    }
+
+    // Parent process
+    close(stdout_pipe[1]);
+    close(stderr_pipe[1]);
+
+    unsigned int job_number =
+        m_jobs_registry->Add({.pid = pid,
+                              .read_fd_out = stdout_pipe[0],
+                              .read_fd_err = stderr_pipe[0],
+                              .command_name = ""});
+    m_output.Put({}, std::format("[{}] {}\n", job_number, pid),
+                 OutputTarget::STDOUT);
+
+    return 0;
+}
+
+vector<vector<Token>> Shell::SplitCommandChain(const vector<Token> &tokens)
+{
+
+    vector<vector<Token>> commands;
+
+    auto chunks =
+        tokens | std::views::chunk_by([](const Token &a, const Token &b) {
+            return (a.type != TokenType::LOGIC_AND_COMMANDS) &&
+                   (b.type != TokenType::LOGIC_AND_COMMANDS);
+        });
+
+    for (const auto &chunk : chunks)
+    {
+        if (std::ranges::distance(chunk) == 1 &&
+            chunk.begin()->type == TokenType::LOGIC_AND_COMMANDS)
+        {
+            continue;
+        }
+
+        vector<Token> command;
+        for (const auto &token : chunk)
+        {
+            if (token.type != TokenType::BACKGROUND_JOB)
+            {
+                command.push_back(token);
+            }
+        }
+        commands.push_back(std::move(command));
+    }
+
+    return commands;
+}
+
+bool Shell::HasBackgroundFlag(const vector<Token> &tokens)
+{
+    return tokens.size() > 1 && tokens.back().type == TokenType::BACKGROUND_JOB;
+}
+
+void Shell::ExitShell(bool exit) { m_exit_shell = exit; }

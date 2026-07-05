@@ -20,9 +20,14 @@ bool BuiltinCommand::NameStartWith(const std::string &partial) const
     return m_name.starts_with(partial);
 }
 
-void BuiltinCommand::Execute(const std::vector<Token> &tokens) const
+int BuiltinCommand::Process(const std::vector<Token> &tokens) const
 {
-    Process(tokens);
+    return 0;
+}
+
+int BuiltinCommand::Execute(const std::vector<Token> &tokens) const
+{
+    return Process(tokens);
 }
 
 const std::string &BuiltinCommand::GetName() const { return m_name; }

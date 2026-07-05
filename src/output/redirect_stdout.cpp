@@ -43,7 +43,7 @@ bool RedirectStdOut::IsApplicable(const std::vector<Token> &tokens,
                    return token.type == TokenType::REDIRECT_STDOUT ||
                           token.type == TokenType::REDIRECT_STDOUT_APPEND;
                }) &&
-           (target == OutputTarget::STDOUT || target == OutputTarget::NONE);
+           (target == OutputTarget::STDOUT);
 }
 
 const Token *RedirectStdOut::GetStdOut(const std::vector<Token> &tokens)

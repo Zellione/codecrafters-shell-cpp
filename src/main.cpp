@@ -12,7 +12,7 @@ int main()
     // Register readline keys
     rl_bind_key('\t', Shell::TabAutoComplete);
 
-    Shell shell = Shell::Instance();
+    Shell &shell = Shell::Instance();
 
     shell.run();
 

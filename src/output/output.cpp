@@ -11,7 +11,7 @@ Output::~Output()
 
 void Output::AddType(OutputType *output) { m_outputs.push_back(output); }
 void Output::Put(const std::vector<Token> &tokens,
-                 const std::string &out_buffer, OutputTarget target)
+                 const std::string &out_buffer, OutputTarget target) const
 {
     OutputType *out = nullptr;
     for (auto *const output : m_outputs)

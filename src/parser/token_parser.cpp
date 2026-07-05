@@ -47,6 +47,11 @@ std::vector<Token> TokenParser::Parse(const std::string &commandline)
             buffer = tmp.token;
             pos = tmp.end_pos;
             break;
+        case ParserState::LOGIC_AND_COMMANDS:
+            tmp = ParseLogicAndCommand(commandline, pos);
+            buffer = tmp.token;
+            pos = tmp.end_pos;
+            break;
         case ParserState::BACKGROUND_JOB:
             tmp = ParseBackgroundJob(commandline, pos);
             buffer = tmp.token;
@@ -73,8 +78,8 @@ std::vector<Token> TokenParser::Parse(const std::string &commandline)
         if (pos + 1 >= commandline.length() ||
             (commandline[pos] == ' ' && state != ParserState::ON_BACKSLASH))
         {
-            TokenType tokenType =
-                DetermineTokenType(state, commandline, buffer, last_start_pos);
+            TokenType tokenType = DetermineTokenType(state, tokens, commandline,
+                                                     buffer, last_start_pos);
             tokens.emplace_back(buffer, tokenType);
             last_start_pos = pos + 1;
             buffer = "";
@@ -87,10 +92,17 @@ std::vector<Token> TokenParser::Parse(const std::string &commandline)
 }
 
 TokenType TokenParser::DetermineTokenType(ParserState state,
+                                          const std::vector<Token> &tokens,
                                           const std::string &commandline,
                                           const std::string &buffer,
                                           size_t start_pos)
 {
+    if (tokens.size() > 1 &&
+        tokens.back().type == TokenType::LOGIC_AND_COMMANDS)
+    {
+        return TokenType::COMMAND;
+    }
+
     switch (state)
     {
     case ParserState::REDIRECT_STDOUT:
@@ -121,6 +133,10 @@ TokenType TokenParser::DetermineTokenType(ParserState state,
     {
         return TokenType::DIR_PATH;
     }
+    if (buffer == "&&")
+    {
+        return TokenType::LOGIC_AND_COMMANDS;
+    }
     if (buffer == "&")
     {
         return TokenType::BACKGROUND_JOB;
@@ -144,7 +160,7 @@ ParserState TokenParser::DetermineState(const std::string &commandline,
     {
         return ParserState::ON_BACKSLASH;
     }
-    if (commandline[pos] == '-')
+    if (pos > 1 && commandline[pos - 1] == ' ' && commandline[pos] == '-')
     {
         return ParserState::FLAG;
     }
@@ -167,6 +183,11 @@ ParserState TokenParser::DetermineState(const std::string &commandline,
     if (commandline[pos] == '2' && commandline[pos + 1] == '>')
     {
         return ParserState::REDIRECT_STDERR;
+    }
+    if (pos < commandline.length() - 1 && commandline[pos] == '&' &&
+        commandline[pos + 1] == '&')
+    {
+        return ParserState::LOGIC_AND_COMMANDS;
     }
     if (commandline[pos] == '&' && pos == commandline.length() - 1)
     {
@@ -264,7 +285,7 @@ InternalToken TokenParser::ParseFlag(const std::string &commandline,
 InternalToken TokenParser::ParseBackgroundJob(const std::string &commandline,
                                               size_t start_pos)
 {
-    std::string key = commandline.substr(start_pos, 1);
+    std::string ampersand = commandline.substr(start_pos, 1);
     size_t pos = start_pos;
     for (; pos < commandline.length(); pos++)
     {
@@ -274,5 +295,18 @@ InternalToken TokenParser::ParseBackgroundJob(const std::string &commandline,
         }
     }
 
-    return {start_pos, pos, key};
+    return {start_pos, pos, ampersand};
+}
+
+InternalToken TokenParser::ParseLogicAndCommand(const std::string &commandline,
+                                                size_t start_pos)
+{
+    std::string dual_ampersand = commandline.substr(start_pos, 2);
+    size_t pos = start_pos + 2;
+    while (pos < commandline.length() - 1 && commandline[pos + 1] == ' ')
+    {
+        pos++;
+    }
+
+    return {start_pos, pos, dual_ampersand};
 }

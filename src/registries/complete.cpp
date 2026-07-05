@@ -45,7 +45,7 @@ vector<string> CompleteRegistry::Autocomplete(const vector<Token> &tokens,
 
     vector<string> autocompletions;
     CmdResult result;
-    if (m_externalCommand->Exec(comp_tokens, env_vars, &result))
+    if (m_externalCommand->Exec(comp_tokens, env_vars, &result) == 0)
     {
         if (result.stdout_output.ends_with('\n'))
         {

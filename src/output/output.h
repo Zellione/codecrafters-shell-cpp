@@ -16,5 +16,5 @@ class Output
     void AddType(OutputType *output);
 
     void Put(const std::vector<Token> &tokens, const std::string &out_buffer,
-             OutputTarget target);
+             OutputTarget target) const;
 };

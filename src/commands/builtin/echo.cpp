@@ -7,7 +7,7 @@ EchoCommand::EchoCommand(Output *output)
 {
 }
 
-void EchoCommand::Process(const std::vector<Token> &tokens) const
+int EchoCommand::Process(const std::vector<Token> &tokens) const
 {
     bool trailing_newline = true;
 
@@ -36,4 +36,6 @@ void EchoCommand::Process(const std::vector<Token> &tokens) const
 
     m_output->Put(tokens, ss.str(), OutputTarget::STDOUT);
     m_output->Put(tokens, "", OutputTarget::STDERR);
+
+    return 0;
 }

@@ -6,20 +6,26 @@
 class Shell
 {
   private:
+    bool m_exit_shell;
+    bool m_line_ready;
+    bool m_main_process;
+
+    std::string m_current_input;
+    std::string m_last_prompt;
+
     BuiltinRegistry m_registry;
     Output m_output;
-    std::string m_currentInput;
 
     std::vector<std::string> m_autocomplete;
-    std::string m_lastprompt;
 
-    JobsRegistry *m_jobsRegistry;
+    JobsRegistry *m_jobs_registry;
 
-    ExternalCommand m_externalComm;
-    CompleteRegistry *m_completeRegistry;
+    ExternalCommand m_external_comm;
+    CompleteRegistry *m_complete_registry;
 
     Shell();
 
+    // BEGIN Autocomplete
     [[nodiscard]] std::vector<std::string>
     CollectAutocompletes(const std::string &partial,
                          const std::vector<Token> &tokens);
@@ -36,8 +42,26 @@ class Shell
 
     [[nodiscard]] std::string
     LongestCommonPrefix(const std::string &partial) const;
+    // END Autocomplete
+
+    // BEGIN Task Execution
+    [[nodiscard]] int ExecuteCommand(const std::vector<Token> &command) const;
+    [[nodiscard]] int
+    ExecuteCommandChain(const std::vector<std::vector<Token>> &commands) const;
+    [[nodiscard]] int ExecuteBackgroundCommandChain(
+        const std::vector<std::vector<Token>> &commands);
+    // END Task Execution
+
+    // BEGIN Coomand Chain Parsing
+    [[nodiscard]] static bool
+    HasBackgroundFlag(const std::vector<Token> &tokens);
+    [[nodiscard]] static std::vector<std::vector<Token>>
+    SplitCommandChain(const std::vector<Token> &tokens);
+    // END Command Chain Parsing
 
   public:
+    Shell(Shell &) = delete;
+    void operator=(const Shell &) = delete;
     ~Shell();
 
     static Shell &Instance()
@@ -48,6 +72,12 @@ class Shell
 
     void run();
 
+    static int ReapBackgroundJobs();
+
     static int TabAutoComplete(int count, int key);
     static int TabAutoCompleteMulti(int count, int key);
+
+    static void LineHandler(char *line);
+
+    void ExitShell(bool exit);
 };

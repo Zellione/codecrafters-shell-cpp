@@ -16,7 +16,8 @@ enum class ParserState : std::uint8_t
     REDIRECT_STDOUT_APPEND,
     REDIRECT_STDERR,
     REDIRECT_STDERR_APPEND,
-    BACKGROUND_JOB
+    BACKGROUND_JOB,
+    LOGIC_AND_COMMANDS
 };
 
 enum class TokenType : std::uint8_t
@@ -30,7 +31,8 @@ enum class TokenType : std::uint8_t
     REDIRECT_STDDERR,
     REDIRECT_STDOUT_APPEND,
     REDIRECT_STDERR_APPEND,
-    BACKGROUND_JOB
+    BACKGROUND_JOB,
+    LOGIC_AND_COMMANDS
 };
 
 struct Token
@@ -63,7 +65,8 @@ class TokenParser
                    ParserState current);
 
     [[nodiscard]] static TokenType
-    DetermineTokenType(ParserState state, const std::string &commandline,
+    DetermineTokenType(ParserState state, const std::vector<Token> &tokens,
+                       const std::string &commandline,
                        const std::string &buffer, size_t start_pos);
 
     [[nodiscard]] static InternalToken
@@ -83,6 +86,9 @@ class TokenParser
 
     [[nodiscard]] static InternalToken
     ParseBackgroundJob(const std::string &commandline, size_t start_pos);
+
+    [[nodiscard]] static InternalToken
+    ParseLogicAndCommand(const std::string &commandline, size_t start_pos);
 
   public:
     TokenParser() = default;

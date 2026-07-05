@@ -12,7 +12,7 @@ class BuiltinCommand
     std::string m_name;
     std::string m_description;
 
-    virtual void Process(const std::vector<Token> &tokens) const {};
+    [[nodiscard]] virtual int Process(const std::vector<Token> &tokens) const;
 
   protected:
     Output *m_output;
@@ -26,5 +26,5 @@ class BuiltinCommand
     [[nodiscard]] const std::string &GetName() const;
     [[nodiscard]] const std::string &GetDescription() const;
 
-    virtual void Execute(const std::vector<Token> &tokens) const;
+    [[nodiscard]] virtual int Execute(const std::vector<Token> &tokens) const;
 };

@@ -2,7 +2,7 @@
 
 #include <format>
 
-void CompleteCommand::Process(const std::vector<Token> &tokens) const
+int CompleteCommand::Process(const std::vector<Token> &tokens) const
 {
     std::string name;
     std::string completion;
@@ -58,13 +58,15 @@ void CompleteCommand::Process(const std::vector<Token> &tokens) const
     if (flag_print)
     {
         Print(tokens, name);
-        return;
+        return 0;
     }
 
     if (flag_create)
     {
         Create(name, completion);
     }
+
+    return 0;
 }
 
 void CompleteCommand::Print(const std::vector<Token> &tokens,
@@ -86,17 +88,15 @@ void CompleteCommand::Print(const std::vector<Token> &tokens,
                   OutputTarget::STDOUT);
 }
 
-bool CompleteCommand::Create(const std::string &name,
+void CompleteCommand::Create(const std::string &name,
                              const std::string &completion) const
 {
     if (m_completeRegistry->Has(name))
     {
-        return false;
+        return;
     }
 
     m_completeRegistry->Add(name, completion);
-
-    return true;
 }
 
 CompleteCommand::CompleteCommand(Output *output,

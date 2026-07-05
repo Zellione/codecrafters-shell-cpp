@@ -1,4 +1,5 @@
 #include "exit.h"
+#include "../../shell.h"
 #include "command.h"
 
 ExitCommand::ExitCommand(Output *output)
@@ -6,4 +7,9 @@ ExitCommand::ExitCommand(Output *output)
 {
 }
 
-void ExitCommand::Process(const std::vector<Token> &tokens) const { exit(0); }
+int ExitCommand::Process(const std::vector<Token> &tokens) const
+{
+    Shell &shell = Shell::Instance();
+    shell.ExitShell(true);
+    return 0;
+}

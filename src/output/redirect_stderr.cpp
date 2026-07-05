@@ -43,7 +43,7 @@ bool RedirectStdErr::IsApplicable(const std::vector<Token> &tokens,
                    return token.type == TokenType::REDIRECT_STDDERR ||
                           token.type == TokenType::REDIRECT_STDERR_APPEND;
                }) &&
-           (target == OutputTarget::STDERR || target == OutputTarget::NONE);
+           (target == OutputTarget::STDERR);
 }
 
 const Token *RedirectStdErr::GetStdErr(const std::vector<Token> &tokens)

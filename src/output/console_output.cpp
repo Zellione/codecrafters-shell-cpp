@@ -10,5 +10,5 @@ void ConsoleOutput::Print(const std::vector<Token> &tokens,
 bool ConsoleOutput::IsApplicable(const std::vector<Token> &tokens,
                                  OutputTarget target) const
 {
-    return true;
+    return target == OutputTarget::STDOUT;
 }

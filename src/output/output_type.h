@@ -5,7 +5,6 @@
 
 enum class OutputTarget : std::uint8_t
 {
-    NONE,
     STDOUT,
     STDERR
 };

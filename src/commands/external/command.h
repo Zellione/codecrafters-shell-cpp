@@ -22,14 +22,16 @@ class ExternalCommand
     Output *m_output;
     JobsRegistry *m_registry;
 
-    [[nodiscard]] static bool
-    HasBackgroundFlag(const std::vector<Token> &tokens);
+    static void FillArgV(const std::vector<Token> &tokens,
+                         std::vector<char *> &out_argv);
 
   public:
     ExternalCommand(Output *output, JobsRegistry *registry);
-    [[nodiscard]] bool Exec(const std::vector<Token> &tokens,
-                            const std::vector<char *> &env_vars,
-                            CmdResult *result_out = nullptr) const;
+    [[nodiscard]] int Exec(const std::vector<Token> &tokens,
+                           const std::vector<char *> &env_vars,
+                           CmdResult *result_out = nullptr) const;
+
+    void ExecCommand(std::vector<Token> command) const;
 
     static void ReadPipes(int stdout_fd, int stderr_fd, CmdResult &result);
 
