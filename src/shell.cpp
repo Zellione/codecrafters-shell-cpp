@@ -487,11 +487,11 @@ int Shell::ExecuteBackgroundCommandChain(const vector<vector<Token>> &commands)
     close(stdout_pipe[1]);
     close(stderr_pipe[1]);
 
-    unsigned int job_number =
-        m_jobs_registry->Add({.pid = pid,
-                              .read_fd_out = stdout_pipe[0],
-                              .read_fd_err = stderr_pipe[0],
-                              .command_name = ""});
+    unsigned int job_number = m_jobs_registry->Add(
+        {.pid = pid,
+         .read_fd_out = stdout_pipe[0],
+         .read_fd_err = stderr_pipe[0],
+         .commandline = std::move(GetCommandline(commands))});
     m_output.Put({}, std::format("[{}] {}\n", job_number, pid),
                  OutputTarget::STDOUT);
 
@@ -500,7 +500,6 @@ int Shell::ExecuteBackgroundCommandChain(const vector<vector<Token>> &commands)
 
 vector<vector<Token>> Shell::SplitCommandChain(const vector<Token> &tokens)
 {
-
     vector<vector<Token>> commands;
 
     auto chunks =
@@ -537,3 +536,27 @@ bool Shell::HasBackgroundFlag(const vector<Token> &tokens)
 }
 
 void Shell::ExitShell(bool exit) { m_exit_shell = exit; }
+
+std::string
+Shell::GetCommandline(const std::vector<std::vector<Token>> &commands)
+{
+    std::stringstream ss;
+    for (size_t i = 0; i < commands.size(); i++)
+    {
+        for (size_t j = 0; j < commands[i].size(); j++)
+        {
+            ss << commands[i][j].token;
+            if (j + 1 != commands[i].size())
+            {
+                ss << " ";
+            }
+        }
+        if (i + 1 != commands.size())
+        {
+            ss << " && ";
+        }
+    }
+    ss << " &";
+
+    return ss.str();
+}

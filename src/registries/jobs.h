@@ -9,7 +9,7 @@ struct BackgroundJob
     pid_t pid;
     int read_fd_out;
     int read_fd_err;
-    std::string command_name;
+    std::string commandline;
 };
 
 class JobsRegistry

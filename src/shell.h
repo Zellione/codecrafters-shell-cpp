@@ -57,6 +57,8 @@ class Shell
     HasBackgroundFlag(const std::vector<Token> &tokens);
     [[nodiscard]] static std::vector<std::vector<Token>>
     SplitCommandChain(const std::vector<Token> &tokens);
+    [[nodiscard]] static std::string
+    GetCommandline(const std::vector<std::vector<Token>> &commands);
     // END Command Chain Parsing
 
   public:
