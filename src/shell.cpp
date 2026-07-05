@@ -98,6 +98,7 @@ void Shell::run()
         m_last_prompt = m_current_input;
         m_current_input.clear();
         m_line_ready = false;
+        m_jobs_registry->Cleanup();
     }
 
     rl_callback_handler_remove();
@@ -353,6 +354,12 @@ int Shell::ReapBackgroundJobs()
     for (auto it = background_jobs.begin(); it != background_jobs.end();)
     {
         BackgroundJob &background_job = it->second;
+        if (background_job.status == BackgroundJobStatus::DONE)
+        {
+            it++;
+            continue;
+        }
+
         int status;
         pid_t result = waitpid(background_job.pid, &status, WNOHANG);
 
@@ -381,7 +388,12 @@ int Shell::ReapBackgroundJobs()
         }
         close(background_job.read_fd_err);
 
-        it = background_jobs.erase(it);
+        if (WIFEXITED(status))
+        {
+            background_job.status = BackgroundJobStatus::DONE;
+            background_job.commandline = background_job.commandline.substr(
+                0, background_job.commandline.length() - 2);
+        }
 
         shell.m_output.Put({}, output, OutputTarget::STDOUT);
         shell.m_output.Put({}, error, OutputTarget::STDERR);
@@ -491,6 +503,7 @@ int Shell::ExecuteBackgroundCommandChain(const vector<vector<Token>> &commands)
         {.pid = pid,
          .read_fd_out = stdout_pipe[0],
          .read_fd_err = stderr_pipe[0],
+         .status = BackgroundJobStatus::RUNNING,
          .commandline = std::move(GetCommandline(commands))});
     m_output.Put({}, std::format("[{}] {}\n", job_number, pid),
                  OutputTarget::STDOUT);

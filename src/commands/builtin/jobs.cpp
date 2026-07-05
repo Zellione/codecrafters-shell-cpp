@@ -1,6 +1,8 @@
 #include "jobs.h"
 #include "command.h"
 #include <format>
+#include <sstream>
+#include <string>
 
 JobsCommand::JobsCommand(Output *output, JobsRegistry &registry)
     : BuiltinCommand("jobs", "jobs is a shell builtin", output),
@@ -26,11 +28,34 @@ int JobsCommand::Process(const std::vector<Token> &tokens) const
         // Status column (Running) is padded to 24 characters (7 characters + 17
         // characters space)
         m_output->Put(tokens,
-                      std::format("[{}]{}  Running                 {}\n",
-                                  it->first, job_marker,
+                      std::format("[{}]{}  {}{}\n", it->first, job_marker,
+                                  GenerateProcessStatus(it->second.status),
                                   it->second.commandline),
                       OutputTarget::STDOUT);
     }
 
     return 0;
+}
+
+std::string JobsCommand::GenerateProcessStatus(BackgroundJobStatus status)
+{
+    std::stringstream ss;
+    std::string status_string;
+
+    switch (status)
+    {
+    case BackgroundJobStatus::RUNNING:
+        status_string = "Running";
+        break;
+    case BackgroundJobStatus::DONE:
+        status_string = "Done";
+        break;
+    }
+    ss << status_string;
+    for (size_t i = 0; i < 24 - status_string.length(); i++)
+    {
+        ss << " ";
+    }
+
+    return ss.str();
 }

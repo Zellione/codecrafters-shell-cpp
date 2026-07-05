@@ -13,3 +13,16 @@ BackgroundJob &JobsRegistry::Get(unsigned int job_number)
 }
 
 std::map<unsigned int, BackgroundJob> &JobsRegistry::GetAll() { return m_jobs; }
+
+void JobsRegistry::Cleanup()
+{
+    for (auto it = m_jobs.begin(); it != m_jobs.end();)
+    {
+        if (it->second.status == BackgroundJobStatus::DONE)
+        {
+            it = m_jobs.erase(it);
+            continue;
+        }
+        it++;
+    }
+}
