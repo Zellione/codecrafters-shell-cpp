@@ -98,7 +98,8 @@ void Shell::run()
         m_last_prompt = m_current_input;
         m_current_input.clear();
         m_line_ready = false;
-        m_jobs_registry->Cleanup();
+
+        m_jobs_registry->PrintDone(m_output);
     }
 
     rl_callback_handler_remove();

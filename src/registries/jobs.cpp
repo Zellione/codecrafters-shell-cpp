@@ -1,4 +1,8 @@
 #include "jobs.h"
+#include "../commands/builtin/jobs.h"
+
+#include <format>
+#include <ranges>
 
 unsigned int JobsRegistry::Add(BackgroundJob job)
 {
@@ -25,4 +29,51 @@ void JobsRegistry::Cleanup()
         }
         it++;
     }
+}
+
+void JobsRegistry::PrintDone(const Output &output)
+{
+    if (m_jobs.empty())
+    {
+        return;
+    }
+
+    auto jobs = m_jobs | std::views::filter([](const auto &pair) {
+                    return pair.second.status == BackgroundJobStatus::DONE;
+                }) |
+                std::ranges::to<std::map>();
+
+    if (jobs.empty())
+    {
+        return;
+    }
+
+    unsigned int current_number = std::prev(jobs.end())->first;
+    unsigned int previous_number =
+        jobs.size() > 1 ? std::prev(std::prev(jobs.end()))->first : 0;
+    for (const auto &[key, value] : jobs)
+    {
+        if (value.status != BackgroundJobStatus::DONE)
+        {
+            continue;
+        }
+
+        char job_marker = ' ';
+        if (key == current_number)
+        {
+            job_marker = '+';
+        }
+        if (key == previous_number)
+        {
+            job_marker = '-';
+        }
+
+        output.Put({},
+                   std::format("[{}]{}  {}{}\n", key, job_marker,
+                               JobsCommand::GenerateProcessStatus(value.status),
+                               value.commandline),
+                   OutputTarget::STDOUT);
+    }
+
+    Cleanup();
 }

@@ -4,6 +4,8 @@
 #include <string>
 #include <sys/types.h>
 
+#include "../output/output.h"
+
 enum class BackgroundJobStatus : u_int8_t
 {
     RUNNING,
@@ -32,4 +34,5 @@ class JobsRegistry
     [[nodiscard]] std::map<unsigned int, BackgroundJob> &GetAll();
 
     void Cleanup();
+    void PrintDone(const Output &output);
 };
