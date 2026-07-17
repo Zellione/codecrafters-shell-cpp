@@ -1,32 +1,29 @@
 #include "echo.h"
-#include "../../parser/token_parser.h"
 #include <sstream>
 
-EchoCommand::EchoCommand(Output *output)
-    : BuiltinCommand("echo", "echo is a shell builtin", output)
+using Ast::Command;
+
+EchoCommand::EchoCommand() : BuiltinCommand("echo", "echo is a shell builtin")
 {
 }
 
-int EchoCommand::Process(const std::vector<Token> &tokens) const
+int EchoCommand::Process(const Command &comm) const
 {
     bool trailing_newline = true;
 
     std::stringstream ss;
-    for (size_t i = 1; i < tokens.size(); i++)
+    for (size_t i = 1; i < comm.Args.size(); i++)
     {
-        if (tokens[i].token.starts_with("-n"))
+        if (comm.Args[i].starts_with("-n"))
         {
             trailing_newline = false;
             continue;
         }
 
-        if (tokens[i].type == TokenType::TEXT)
+        ss << comm.Args[i];
+        if (i < comm.Args.size() - 1)
         {
-            ss << tokens[i].token;
-            if (i < tokens.size() - 1 && tokens[i + 1].type == TokenType::TEXT)
-            {
-                ss << " ";
-            }
+            ss << " ";
         }
     }
     if (trailing_newline)
@@ -34,8 +31,7 @@ int EchoCommand::Process(const std::vector<Token> &tokens) const
         ss << '\n';
     }
 
-    m_output->Put(tokens, ss.str(), OutputTarget::STDOUT);
-    m_output->Put(tokens, "", OutputTarget::STDERR);
+    std::cout << ss.str();
 
     return 0;
 }

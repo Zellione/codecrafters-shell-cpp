@@ -12,10 +12,10 @@ class BuiltinRegistry
     ~BuiltinRegistry();
 
     [[nodiscard]] const BuiltinCommand *
-    FindCommand(const std::vector<Token> &tokens) const;
+    FindCommand(const Ast::Command &comm) const;
 
     [[nodiscard]] const BuiltinCommand *
-    FindCommandInArguments(const std::vector<Token> &tokens, size_t pos) const;
+    FindCommandInArguments(const Ast::Command &comm, size_t pos) const;
 
     [[nodiscard]] std::vector<std::string>
     AutoComplete(const std::string &partial) const;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../parser/token_parser.h"
+#include "../parser/ast.h"
 #include "output_type.h"
 #include <vector>
 
@@ -15,6 +15,6 @@ class Output
 
     void AddType(OutputType *output);
 
-    void Put(const std::vector<Token> &tokens, const std::string &out_buffer,
+    void Put(const Ast::Command &comm, const std::string &out_buffer,
              OutputTarget target) const;
 };

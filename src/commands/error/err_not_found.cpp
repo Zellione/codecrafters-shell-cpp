@@ -2,8 +2,10 @@
 
 #include "err_not_found.h"
 
-void ErrorNotFound::Raise(const std::vector<Token> &tokens)
+using Ast::Command;
+
+void ErrorNotFound::Raise(const Command &comm)
 {
-    std::string command = !tokens.empty() ? tokens[0].token : "";
-    std::cout << command << ": command not found" << '\n';
+    std::string command = !comm.Args.empty() ? comm.Args[0] : "";
+    std::cerr << command << ": command not found" << '\n';
 }

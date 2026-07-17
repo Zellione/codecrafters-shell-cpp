@@ -8,91 +8,44 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+using Ast::Command;
 using std::string;
 using std::vector;
 
-ExternalCommand::ExternalCommand(Output *output, JobsRegistry *registry)
-    : m_output(output), m_registry(registry)
-{
-}
+ExternalCommand::ExternalCommand(Output *output) : m_output(output) {}
 
-int ExternalCommand::Exec(const vector<Token> &tokens,
-                          const vector<char *> &env_vars,
-                          CmdResult *result_out) const
+int ExternalCommand::Exec(const Command &command,
+                          const vector<char *> &env_vars)
 {
-    if (tokens.empty())
+    if (command.Args.empty())
     {
-        return -1;
+        return 1;
     }
 
-    std::filesystem::path exec_path = find_executable(tokens[0].token);
+    std::filesystem::path exec_path = find_executable(command.Args[0]);
     if (exec_path.empty())
     {
-        return -1;
+        return 1;
     }
 
-    std::array<int, 2> stdout_pipe;
-    std::array<int, 2> stderr_pipe;
-    pipe(stdout_pipe.data());
-    pipe(stderr_pipe.data());
+    vector<char *> argv;
+    FillArgV(command, argv);
 
-    pid_t pid = fork();
-
-    if (pid == 0)
+    if (!env_vars.empty())
     {
-        // Child process
-        close(stdout_pipe[0]);
-        close(stderr_pipe[0]);
+        execvpe(argv[0], argv.data(), env_vars.data());
 
-        dup2(stdout_pipe[1], STDOUT_FILENO);
-        dup2(stderr_pipe[1], STDERR_FILENO);
-
-        close(stdout_pipe[1]);
-        close(stderr_pipe[1]);
-
-        vector<char *> argv;
-        FillArgV(tokens, argv);
-
-        if (!env_vars.empty())
+        for (char *env_var : env_vars)
         {
-            execvpe(argv[0], argv.data(), env_vars.data());
-
-            for (char *env_var : env_vars)
-            {
-                free(env_var);
-            }
+            free(env_var);
         }
-        else
-        {
-
-            execvp(argv[0], argv.data());
-        }
-
-        _exit(127); // exec failed
-    }
-
-    // Parent process
-    close(stdout_pipe[1]);
-    close(stderr_pipe[1]);
-
-    CmdResult result;
-    ReadPipes(stdout_pipe[0], stderr_pipe[0], result);
-
-    if (result_out == nullptr)
-    {
-        m_output->Put(tokens, result.stdout_output, OutputTarget::STDOUT);
-        m_output->Put(tokens, result.stderr_output, OutputTarget::STDERR);
     }
     else
     {
-        result_out->Fill(result);
+        execvp(argv[0], argv.data());
     }
 
-    int status;
-    waitpid(pid, &status, 0);
-    result.exit_code = WIFEXITED(status) ? WEXITSTATUS(status) : -1;
-
-    return 0;
+    return -1;
 }
 
 void ExternalCommand::ReadPipes(int stdout_fd, int stderr_fd, CmdResult &result)
@@ -116,7 +69,7 @@ void ExternalCommand::ReadPipes(int stdout_fd, int stderr_fd, CmdResult &result)
 
     while (true)
     {
-        Shell::ReapBackgroundJobs();
+        // Shell::ReapBackgroundJobs();
 
         fds[0].revents = 0;
         fds[1].revents = 0;
@@ -200,28 +153,17 @@ vector<string> ExternalCommand::SearchExecutable(const string &partial)
     return commands;
 }
 
-void ExternalCommand::FillArgV(const vector<Token> &tokens,
-                               vector<char *> &out_argv)
+void ExternalCommand::FillArgV(const Command &command, vector<char *> &out_argv)
 {
-    std::array<TokenType, 5> applicableTypes{
-        TokenType::TEXT, TokenType::COMMAND, TokenType::FILE_PATH,
-        TokenType::DIR_PATH, TokenType::FLAG};
-
     // Build argv
-    for (const auto &token : tokens)
+    for (const auto &arg : command.Args)
     {
-        if (std::ranges::any_of(applicableTypes,
-                                [&token](TokenType applicableType) {
-                                    return applicableType == token.type;
-                                }))
-        {
-            out_argv.push_back(const_cast<char *>(token.token.c_str()));
-        }
+        out_argv.push_back(const_cast<char *>(arg.c_str()));
     }
     out_argv.push_back(nullptr);
 }
 
-void ExternalCommand::ExecCommand(std::vector<Token> command) const
+void ExternalCommand::ExecCommand(const Ast::Command &command) const
 {
     vector<char *> argv;
     FillArgV(command, argv);

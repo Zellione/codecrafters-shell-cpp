@@ -2,35 +2,34 @@
 #include "../../helper.h"
 #include "command.h"
 
-TypeCommand::TypeCommand(const BuiltinRegistry *registry, Output *output)
-    : BuiltinCommand("type", "type is a shell builtin", output),
-      m_registry(registry)
+using Ast::Command;
+
+TypeCommand::TypeCommand(const BuiltinRegistry *registry)
+    : BuiltinCommand("type", "type is a shell builtin"), m_registry(registry)
 {
 }
 
-int TypeCommand::Process(const std::vector<Token> &tokens) const
+int TypeCommand::Process(const Command &comm) const
 {
-    const BuiltinCommand *command =
-        m_registry->FindCommandInArguments(tokens, 1);
+    const BuiltinCommand *command = m_registry->FindCommandInArguments(comm, 1);
 
     if (command != nullptr)
     {
-        m_output->Put(tokens, std::format("{}\n", command->GetDescription()),
-                      OutputTarget::STDOUT);
+        std::cout << std::format("{}\n", command->GetDescription());
+
         return 0;
     }
 
-    std::string type_check = !tokens.empty() ? tokens[1].token : "";
+    std::string type_check = !comm.Args.empty() ? comm.Args[1] : "";
     std::string executable = find_executable(type_check);
     if (!executable.empty())
     {
-        m_output->Put(tokens, std::format("{} is {}\n", type_check, executable),
-                      OutputTarget::STDOUT);
+        std::cout << std::format("{} is {}\n", type_check, executable);
+
         return 0;
     }
 
-    m_output->Put(tokens, std::format("{}: not found\n", type_check),
-                  OutputTarget::STDOUT);
+    std::cerr << std::format("{}: not found\n", type_check);
 
     return 0;
 }

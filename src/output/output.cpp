@@ -1,5 +1,7 @@
 #include "output.h"
 
+using Ast::Command;
+
 Output::~Output()
 {
     for (auto &m_output : m_outputs)
@@ -10,13 +12,13 @@ Output::~Output()
 }
 
 void Output::AddType(OutputType *output) { m_outputs.push_back(output); }
-void Output::Put(const std::vector<Token> &tokens,
-                 const std::string &out_buffer, OutputTarget target) const
+void Output::Put(const Command &comm, const std::string &out_buffer,
+                 OutputTarget target) const
 {
     OutputType *out = nullptr;
     for (auto *const output : m_outputs)
     {
-        if (output->IsApplicable(tokens, target))
+        if (output->IsApplicable(comm, target))
         {
             out = output;
             break;
@@ -28,5 +30,5 @@ void Output::Put(const std::vector<Token> &tokens,
         return;
     }
 
-    out->Print(tokens, out_buffer);
+    out->Print(comm, out_buffer);
 }

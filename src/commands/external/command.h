@@ -1,14 +1,14 @@
 #pragma once
 
 #include "../../output/output.h"
-#include "../../registries/jobs.h"
+#include "../../parser/ast.h"
 
 struct CmdResult
 {
     void Fill(const CmdResult &result)
     {
-        stdout_output = result.stdout_output;
-        stderr_output = result.stderr_output;
+        stdout_output.append(result.stdout_output);
+        stderr_output.append(result.stderr_output);
         exit_code = result.exit_code;
     }
     std::string stdout_output;
@@ -20,18 +20,16 @@ class ExternalCommand
 {
   private:
     Output *m_output;
-    JobsRegistry *m_registry;
 
-    static void FillArgV(const std::vector<Token> &tokens,
+    static void FillArgV(const Ast::Command &command,
                          std::vector<char *> &out_argv);
 
   public:
-    ExternalCommand(Output *output, JobsRegistry *registry);
-    [[nodiscard]] int Exec(const std::vector<Token> &tokens,
-                           const std::vector<char *> &env_vars,
-                           CmdResult *result_out = nullptr) const;
+    ExternalCommand(Output *output);
+    [[nodiscard]] static int Exec(const Ast::Command &command,
+                           const std::vector<char *> &env_vars);
 
-    void ExecCommand(std::vector<Token> command) const;
+    void ExecCommand(const Ast::Command &command) const;
 
     static void ReadPipes(int stdout_fd, int stderr_fd, CmdResult &result);
 

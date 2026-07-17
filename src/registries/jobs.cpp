@@ -33,11 +33,6 @@ void JobsRegistry::Cleanup()
 
 void JobsRegistry::PrintDone(const Output &output)
 {
-    if (m_jobs.empty())
-    {
-        return;
-    }
-
     auto jobs = m_jobs | std::views::filter([](const auto &pair) {
                     return pair.second.status == BackgroundJobStatus::DONE;
                 }) |

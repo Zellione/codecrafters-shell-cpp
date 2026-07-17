@@ -4,13 +4,14 @@
 #include <sstream>
 #include <string>
 
-JobsCommand::JobsCommand(Output *output, JobsRegistry &registry)
-    : BuiltinCommand("jobs", "jobs is a shell builtin", output),
-      m_registry(registry)
+using Ast::Command;
+
+JobsCommand::JobsCommand(JobsRegistry &registry)
+    : BuiltinCommand("jobs", "jobs is a shell builtin"), m_registry(registry)
 {
 }
 
-int JobsCommand::Process(const std::vector<Token> &tokens) const
+int JobsCommand::Process(const Command &comm) const
 {
     std::map<unsigned int, BackgroundJob> jobs = m_registry.GetAll();
 
@@ -36,11 +37,9 @@ int JobsCommand::Process(const std::vector<Token> &tokens) const
 
         // Status column (Running) is padded to 24 characters (7 characters + 17
         // characters space)
-        m_output->Put(tokens,
-                      std::format("[{}]{}  {}{}\n", job.first, job_marker,
-                                  GenerateProcessStatus(job.second.status),
-                                  job.second.commandline),
-                      OutputTarget::STDOUT);
+        std::cout << std::format("[{}]{}  {}{}\n", job.first, job_marker,
+                                 GenerateProcessStatus(job.second.status),
+                                 job.second.commandline);
     }
 
     m_registry.Cleanup();

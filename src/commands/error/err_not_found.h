@@ -1,11 +1,9 @@
 #pragma once
 
-#include <vector>
-
-#include "../../parser/token_parser.h"
+#include "../../parser/ast.h"
 
 class ErrorNotFound
 {
   public:
-    static void Raise(const std::vector<Token> &tokens);
+    static void Raise(const Ast::Command &comm);
 };

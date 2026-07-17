@@ -1,7 +1,7 @@
 #include "commands/builtin/registry.h"
+#include "commands/executor.h"
 #include "commands/external/command.h"
 #include "registries/complete.h"
-#include "registries/jobs.h"
 
 class Shell
 {
@@ -18,17 +18,16 @@ class Shell
 
     std::vector<std::string> m_autocomplete;
 
-    JobsRegistry *m_jobs_registry;
-
     ExternalCommand m_external_comm;
+
+    Executor m_executor;
     CompleteRegistry *m_complete_registry;
 
     Shell();
 
     // BEGIN Autocomplete
     [[nodiscard]] std::vector<std::string>
-    CollectAutocompletes(const std::string &partial,
-                         const std::vector<Token> &tokens);
+    CollectAutocompletes(const std::string &partial, Ast::Node* nodes);
 
     static std::vector<std::string>
     CollectAutocompleteInPath(const std::string &partial);
@@ -38,28 +37,11 @@ class Shell
 
     static std::vector<std::string>
     CollectAutocompleteInDir(const std::string &partial,
-                             const std::vector<Token> &tokens);
+                             const Ast::Command &comm);
 
     [[nodiscard]] std::string
     LongestCommonPrefix(const std::string &partial) const;
     // END Autocomplete
-
-    // BEGIN Task Execution
-    [[nodiscard]] int ExecuteCommand(const std::vector<Token> &command) const;
-    [[nodiscard]] int
-    ExecuteCommandChain(const std::vector<std::vector<Token>> &commands) const;
-    [[nodiscard]] int ExecuteBackgroundCommandChain(
-        const std::vector<std::vector<Token>> &commands);
-    // END Task Execution
-
-    // BEGIN Coomand Chain Parsing
-    [[nodiscard]] static bool
-    HasBackgroundFlag(const std::vector<Token> &tokens);
-    [[nodiscard]] static std::vector<std::vector<Token>>
-    SplitCommandChain(const std::vector<Token> &tokens);
-    [[nodiscard]] static std::string
-    GetCommandline(const std::vector<std::vector<Token>> &commands);
-    // END Command Chain Parsing
 
   public:
     Shell(Shell &) = delete;

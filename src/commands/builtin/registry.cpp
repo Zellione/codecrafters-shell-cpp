@@ -1,6 +1,7 @@
 #include "registry.h"
 #include "command.h"
 
+using Ast::Command;
 using std::string;
 
 BuiltinRegistry::~BuiltinRegistry()
@@ -12,17 +13,15 @@ BuiltinRegistry::~BuiltinRegistry()
     }
 }
 
-const BuiltinCommand *
-BuiltinRegistry::FindCommand(const std::vector<Token> &tokens) const
+const BuiltinCommand *BuiltinRegistry::FindCommand(const Command &comm) const
 {
-    return FindCommandInArguments(tokens, 0);
+    return FindCommandInArguments(comm, 0);
 }
 
 const BuiltinCommand *
-BuiltinRegistry::FindCommandInArguments(const std::vector<Token> &tokens,
-                                        size_t pos) const
+BuiltinRegistry::FindCommandInArguments(const Command &comm, size_t pos) const
 {
-    string command = !tokens.empty() ? tokens[pos].token : "";
+    string command = !comm.Args.empty() ? comm.Args[pos] : "";
 
     for (auto *const builtin_com : m_commands)
     {

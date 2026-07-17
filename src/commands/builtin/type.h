@@ -6,10 +6,10 @@
 class TypeCommand : public BuiltinCommand
 {
   private:
-    [[nodiscard]] int Process(const std::vector<Token> &tokens) const override;
+    [[nodiscard]] int Process(const Ast::Command &comm) const override;
 
     const BuiltinRegistry *m_registry;
 
   public:
-    TypeCommand(const BuiltinRegistry *registry, Output *output);
+    TypeCommand(const BuiltinRegistry *registry);
 };

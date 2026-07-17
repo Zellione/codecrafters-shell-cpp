@@ -1,59 +1,65 @@
 #include "redirect_stdout.h"
 
 #include <algorithm>
-#include <filesystem>
 #include <fstream>
 #include <iostream>
 
-void RedirectStdOut::Print(const std::vector<Token> &tokens,
+using Ast::Command;
+using Ast::Redirect;
+using Ast::TokenType;
+
+void RedirectStdOut::Print(const Ast::Command &comm,
                            const std::string &out_buffer) const
 {
-    const Token *output_token = GetStdOut(tokens);
+    const Redirect *redir = GetStdOut(comm);
 
-    if (output_token == nullptr || output_token->token.empty())
+    if (redir == nullptr || redir->Target.empty())
     {
         return;
     }
 
-    if (output_token->type == TokenType::REDIRECT_STDOUT)
+    std::ios::openmode mode = std::ios::app;
+    if (redir->Type == TokenType::GREATER ||
+        redir->Type == Ast::TokenType::ONE_GREATER)
     {
-        if (std::filesystem::exists(output_token->token))
-        {
-            std::filesystem::remove(output_token->token);
-        }
+        mode = std::ios::out | std::ios::trunc;
     }
-    std::ofstream file(output_token->token, std::ios::app);
+    std::ofstream file(redir->Target, mode);
 
     file << out_buffer;
     if (!file.is_open())
     {
-        std::cout << "Error: cannot open " << output_token->token << '\n';
+        std::cout << "Error: cannot open " << redir->Target << '\n';
     }
 
     file.flush();
     file.close();
 }
 
-bool RedirectStdOut::IsApplicable(const std::vector<Token> &tokens,
+bool RedirectStdOut::IsApplicable(const Ast::Command &comm,
                                   OutputTarget target) const
 {
     return std::ranges::any_of(
-               tokens,
-               [](const Token &token) {
-                   return token.type == TokenType::REDIRECT_STDOUT ||
-                          token.type == TokenType::REDIRECT_STDOUT_APPEND;
+               comm.Redirects,
+               [](const Redirect &redir) {
+                   return redir.Type == TokenType::GREATER ||
+                          redir.Type == TokenType::GREATER_GREATER ||
+                          redir.Type == TokenType::ONE_GREATER ||
+                          redir.Type == TokenType::ONE_GREATER_GREATER;
                }) &&
            (target == OutputTarget::STDOUT);
 }
 
-const Token *RedirectStdOut::GetStdOut(const std::vector<Token> &tokens)
+const Redirect *RedirectStdOut::GetStdOut(const Command &comm)
 {
-    for (const auto &token : tokens)
+    for (const auto &redirect : comm.Redirects)
     {
-        if (token.type == TokenType::REDIRECT_STDOUT ||
-            token.type == TokenType::REDIRECT_STDOUT_APPEND)
+        if (redirect.Type == Ast::TokenType::GREATER ||
+            redirect.Type == Ast::TokenType::GREATER_GREATER ||
+            redirect.Type == Ast::TokenType::ONE_GREATER ||
+            redirect.Type == Ast::TokenType::ONE_GREATER_GREATER)
         {
-            return &token;
+            return &redirect;
         }
     }
 

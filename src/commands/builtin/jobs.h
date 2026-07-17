@@ -8,10 +8,10 @@ class JobsCommand : public BuiltinCommand
   private:
     JobsRegistry &m_registry;
 
-    [[nodiscard]] int Process(const std::vector<Token> &tokens) const override;
+    [[nodiscard]] int Process(const Ast::Command &comm) const override;
 
   public:
-    JobsCommand(Output *output, JobsRegistry &registry);
+    JobsCommand(JobsRegistry &registry);
 
     [[nodiscard]] static std::string
     GenerateProcessStatus(BackgroundJobStatus status);

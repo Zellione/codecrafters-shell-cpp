@@ -5,8 +5,8 @@
 class ExitCommand : public BuiltinCommand
 {
   private:
-    [[nodiscard]] int Process(const std::vector<Token> &tokens) const override;
+    [[nodiscard]] int Process(const Ast::Command &comm) const override;
 
   public:
-    ExitCommand(Output *output);
+    ExitCommand();
 };

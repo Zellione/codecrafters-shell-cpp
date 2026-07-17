@@ -4,23 +4,22 @@
 #include <string>
 #include <vector>
 
-#include "../commands/external/command.h"
+#include "../commands/executor.h"
 
 class CompleteRegistry
 {
   private:
     std::map<std::string, std::string> m_completions;
+    Executor& m_executor;
 
-    [[nodiscard]] std::vector<Token>
-    BuildAutocompleteTokens(const std::vector<Token> &tokens,
+    [[nodiscard]] Ast::Node *
+    BuildAutocompleteTokens(const Ast::Command &comm,
                             const std::string &partial) const;
-    [[nodiscard]] std::vector<char *>
-    BuildEnvVars(const std::vector<Token> &tokens,
-                 const std::string &partial) const;
-    ExternalCommand *m_externalCommand;
+    [[nodiscard]] static std::vector<char *>
+    BuildEnvVars(const std::string &partial);
 
   public:
-    CompleteRegistry(ExternalCommand *externalCommand);
+    CompleteRegistry(Executor &executor);
 
     void Add(const std::string &name, const std::string &completion);
     void Remove(const std::string &name);
@@ -28,6 +27,5 @@ class CompleteRegistry
     [[nodiscard]] bool Has(const std::string &name) const;
 
     [[nodiscard]] std::vector<std::string>
-    Autocomplete(const std::vector<Token> &tokens,
-                 const std::string &partial) const;
+    Autocomplete(const Ast::Command &comm, const std::string &partial) const;
 };

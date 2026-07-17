@@ -1,14 +1,20 @@
 #include "complete.h"
+
 #include <cstring>
 #include <format>
 #include <ranges>
 
+#include "../parser/lexer.h"
+#include "../parser/parser.h"
+
+using Ast::Command;
+using Ast::Node;
 using std::format;
 using std::string;
 using std::vector;
 
-CompleteRegistry::CompleteRegistry(ExternalCommand *externalCommand)
-    : m_externalCommand(externalCommand)
+CompleteRegistry::CompleteRegistry(Executor &executor)
+    : m_executor(executor)
 {
 }
 
@@ -32,20 +38,20 @@ bool CompleteRegistry::Has(const string &name) const
     return m_completions.contains(name);
 }
 
-vector<string> CompleteRegistry::Autocomplete(const vector<Token> &tokens,
+vector<string> CompleteRegistry::Autocomplete(const Command &comm,
                                               const string &partial) const
 {
-    if (tokens.empty() || !Has(tokens[0].token))
+    if (comm.Args.empty() || !Has(comm.Args[0]))
     {
         return {};
     }
 
-    vector<Token> comp_tokens = BuildAutocompleteTokens(tokens, partial);
-    vector<char *> env_vars = BuildEnvVars(tokens, partial);
+    Node *nodes = BuildAutocompleteTokens(comm, partial);
+    vector<char *> env_vars = BuildEnvVars(partial);
 
     vector<string> autocompletions;
     CmdResult result;
-    if (m_externalCommand->Exec(comp_tokens, env_vars, &result) == 0)
+    if (m_executor.Exec(nodes, env_vars, &result) == 0)
     {
         if (result.stdout_output.ends_with('\n'))
         {
@@ -58,24 +64,22 @@ vector<string> CompleteRegistry::Autocomplete(const vector<Token> &tokens,
     return autocompletions;
 }
 
-vector<Token>
-CompleteRegistry::BuildAutocompleteTokens(const vector<Token> &tokens,
-                                          const string &partial) const
+Node *CompleteRegistry::BuildAutocompleteTokens(const Command &comm,
+                                                const string &partial) const
 {
-    const string &completion_script = Get(tokens[0].token);
+    const string &completion_script = Get(comm.Args[0]);
 
-    vector<Token> comp_tokens = TokenParser::Parse(completion_script);
+    string complete_comm = std::format(
+        R"({} "{}" "{}" "{}")", completion_script, comm.Args[0],
+        comm.Args.empty() ? "" : comm.Args.back(),
+        comm.Args.size() > 1 ? comm.Args[comm.Args.size() - 2] : "");
 
-    string complete_comm =
-        std::format(R"({} "{}" "{}" "{}")", completion_script, tokens[0].token,
-                    tokens.empty() ? "" : tokens.back().token,
-                    tokens.size() > 1 ? tokens[tokens.size() - 2].token : "");
-
-    return TokenParser::Parse(complete_comm);
+    Lexer comp_lexer(complete_comm);
+    Parser comp_parser(comp_lexer);
+    return comp_parser.Parse();
 }
 
-vector<char *> CompleteRegistry::BuildEnvVars(const vector<Token> &tokens,
-                                              const string &partial) const
+vector<char *> CompleteRegistry::BuildEnvVars(const string &partial)
 {
     vector<char *> env;
     env.push_back(strdup(format("COMP_LINE={}", partial).c_str()));

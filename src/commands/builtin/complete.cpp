@@ -2,7 +2,9 @@
 
 #include <format>
 
-int CompleteCommand::Process(const std::vector<Token> &tokens) const
+using Ast::Command;
+
+int CompleteCommand::Process(const Ast::Command &comm) const
 {
     std::string name;
     std::string completion;
@@ -10,41 +12,35 @@ int CompleteCommand::Process(const std::vector<Token> &tokens) const
     bool flag_create = false;
     bool flag_remove = false;
 
-    for (size_t i = 0; i < tokens.size(); i++)
+    for (auto it = comm.Args.begin(); it != comm.Args.end(); it++)
     {
-        switch (tokens[i].type)
+        const std::string &arg = *it;
+        // printFlag
+        if (arg == "-p")
         {
-        case TokenType::FLAG:
-            // printFlag
-            if (tokens[i].token == "-p")
-            {
-                flag_print = true;
-            }
-
-            // addFlag
-            if (tokens[i].token == "-C")
-            {
-                if (i >= tokens.size())
-                {
-                    continue;
-                }
-                flag_create = true;
-            }
-
-            // removeFlag
-            if (tokens[i].token == "-r")
-            {
-                flag_remove = true;
-            }
-            break;
-        case TokenType::FILE_PATH:
-            completion = tokens[i].token;
-            break;
-        case TokenType::TEXT:
-            name = tokens[i].token;
-        default:
-            break;
+            flag_print = true;
+            continue;
         }
+
+        // addFlag
+        if (arg == "-C")
+        {
+            if ((it + 1) != comm.Args.end())
+            {
+                completion = *(it + 1);
+            }
+            flag_create = true;
+            continue;
+        }
+
+        // removeFlag
+        if (arg == "-r")
+        {
+            flag_remove = true;
+            continue;
+        }
+
+        name = arg;
     }
 
     if (flag_remove)
@@ -57,7 +53,7 @@ int CompleteCommand::Process(const std::vector<Token> &tokens) const
 
     if (flag_print)
     {
-        Print(tokens, name);
+        Print(comm, name);
         return 0;
     }
 
@@ -69,23 +65,18 @@ int CompleteCommand::Process(const std::vector<Token> &tokens) const
     return 0;
 }
 
-void CompleteCommand::Print(const std::vector<Token> &tokens,
-                            const std::string &name) const
+void CompleteCommand::Print(const Command &comm, const std::string &name) const
 {
     if (!m_completeRegistry->Has(name))
     {
-        m_output->Put(
-            tokens,
-            std::format("complete: {}: no completion specification\n", name),
-            OutputTarget::STDERR);
+        std::cerr << std::format("complete: {}: no completion specification\n",
+                                 name);
 
         return;
     }
 
-    m_output->Put(tokens,
-                  std::format("complete -C '{}' {}\n",
-                              m_completeRegistry->Get(name), name),
-                  OutputTarget::STDOUT);
+    std::cout << std::format("complete -C '{}' {}\n",
+                             m_completeRegistry->Get(name), name);
 }
 
 void CompleteCommand::Create(const std::string &name,
@@ -99,9 +90,8 @@ void CompleteCommand::Create(const std::string &name,
     m_completeRegistry->Add(name, completion);
 }
 
-CompleteCommand::CompleteCommand(Output *output,
-                                 CompleteRegistry *completeRegistry)
-    : BuiltinCommand("complete", "complete is a shell builtin", output),
+CompleteCommand::CompleteCommand(CompleteRegistry *completeRegistry)
+    : BuiltinCommand("complete", "complete is a shell builtin"),
       m_completeRegistry(completeRegistry)
 {
 }

@@ -1,59 +1,59 @@
 #include "redirect_stderr.h"
 
 #include <algorithm>
-#include <filesystem>
 #include <fstream>
 #include <iostream>
 
-void RedirectStdErr::Print(const std::vector<Token> &tokens,
+using Ast::Redirect;
+using Ast::TokenType;
+
+void RedirectStdErr::Print(const Ast::Command &comm,
                            const std::string &out_buffer) const
 {
-    const Token *output_token = GetStdErr(tokens);
+    const Redirect *redirect = GetStdErr(comm);
 
-    if (output_token == nullptr || output_token->token.empty())
+    if (redirect == nullptr || redirect->Target.empty())
     {
         return;
     }
 
-    if (output_token->type == TokenType::REDIRECT_STDDERR)
+    std::ios::openmode mode = std::ios::app;
+    if (redirect->Type == TokenType::TWO_GREATER)
     {
-        if (std::filesystem::exists(output_token->token))
-        {
-            std::filesystem::remove(output_token->token);
-        }
+        mode = std::ios::out | std::ios::trunc;
     }
-    std::ofstream file(output_token->token, std::ios::app);
+    std::ofstream file(redirect->Target, mode);
 
     file << out_buffer;
     if (!file.is_open())
     {
-        std::cout << "Error: cannot open " << output_token->token << '\n';
+        std::cerr << "Error: cannot open " << redirect->Target << '\n';
     }
 
     file.flush();
     file.close();
 }
 
-bool RedirectStdErr::IsApplicable(const std::vector<Token> &tokens,
+bool RedirectStdErr::IsApplicable(const Ast::Command &comm,
                                   OutputTarget target) const
 {
     return std::ranges::any_of(
-               tokens,
-               [](const Token &token) {
-                   return token.type == TokenType::REDIRECT_STDDERR ||
-                          token.type == TokenType::REDIRECT_STDERR_APPEND;
+               comm.Redirects,
+               [](const Redirect &redir) {
+                   return redir.Type == TokenType::TWO_GREATER ||
+                          redir.Type == TokenType::TWO_GREATER_GREATER;
                }) &&
            (target == OutputTarget::STDERR);
 }
 
-const Token *RedirectStdErr::GetStdErr(const std::vector<Token> &tokens)
+const Redirect *RedirectStdErr::GetStdErr(const Ast::Command &comm)
 {
-    for (const auto &token : tokens)
+    for (const auto &redirect : comm.Redirects)
     {
-        if (token.type == TokenType::REDIRECT_STDDERR ||
-            token.type == TokenType::REDIRECT_STDERR_APPEND)
+        if (redirect.Type == TokenType::TWO_GREATER ||
+            redirect.Type == TokenType::TWO_GREATER_GREATER)
         {
-            return &token;
+            return &redirect;
         }
     }
 
