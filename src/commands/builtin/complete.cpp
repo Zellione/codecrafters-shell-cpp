@@ -91,7 +91,7 @@ void CompleteCommand::Create(const std::string &name,
 }
 
 CompleteCommand::CompleteCommand(CompleteRegistry *completeRegistry)
-    : BuiltinCommand("complete", "complete is a shell builtin"),
+    : BuiltinCommand("complete"),
       m_completeRegistry(completeRegistry)
 {
 }

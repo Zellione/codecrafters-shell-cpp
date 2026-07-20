@@ -2,6 +2,7 @@
 #include "commands/builtin/complete.h"
 #include "commands/builtin/echo.h"
 #include "commands/builtin/exit.h"
+#include "commands/builtin/history.h"
 #include "commands/builtin/jobs.h"
 #include "commands/builtin/type.h"
 #include "helper/filesystem.h"
@@ -44,6 +45,7 @@ Shell::Shell()
     m_registry.RegisterCommand(new TypeCommand(&m_registry));
     m_registry.RegisterCommand(new JobsCommand(m_executor.GetBGJobsRegistry()));
     m_registry.RegisterCommand(new CompleteCommand(m_complete_registry));
+    m_registry.RegisterCommand(new HistoryCommand());
 }
 
 Shell::~Shell()

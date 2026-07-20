@@ -4,8 +4,8 @@
 
 using std::string;
 
-BuiltinCommand::BuiltinCommand(string name, string description)
-    : m_name(std::move(name)), m_description(std::move(description))
+BuiltinCommand::BuiltinCommand(string name)
+    : m_name(std::move(name))
 {
 }
 
@@ -27,7 +27,3 @@ int BuiltinCommand::Execute(const Ast::Command &command) const
 }
 
 const std::string &BuiltinCommand::GetName() const { return m_name; }
-const std::string &BuiltinCommand::GetDescription() const
-{
-    return m_description;
-}

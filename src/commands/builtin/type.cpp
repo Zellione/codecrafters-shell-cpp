@@ -5,7 +5,7 @@
 using Ast::Command;
 
 TypeCommand::TypeCommand(const BuiltinRegistry *registry)
-    : BuiltinCommand("type", "type is a shell builtin"), m_registry(registry)
+    : BuiltinCommand("type"), m_registry(registry)
 {
 }
 
@@ -15,7 +15,7 @@ int TypeCommand::Process(const Command &comm) const
 
     if (command != nullptr)
     {
-        std::cout << std::format("{}\n", command->GetDescription());
+        std::cout << std::format("{} is a shell builtin\n", command->GetName());
 
         return 0;
     }

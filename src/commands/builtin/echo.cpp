@@ -3,7 +3,7 @@
 
 using Ast::Command;
 
-EchoCommand::EchoCommand() : BuiltinCommand("echo", "echo is a shell builtin")
+EchoCommand::EchoCommand() : BuiltinCommand("echo")
 {
 }
 

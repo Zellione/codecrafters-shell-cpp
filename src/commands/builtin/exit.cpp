@@ -4,7 +4,7 @@
 
 using Ast::Command;
 
-ExitCommand::ExitCommand() : BuiltinCommand("exit", "exit is a shell builtin")
+ExitCommand::ExitCommand() : BuiltinCommand("exit")
 {
 }
 

@@ -7,7 +7,7 @@
 using Ast::Command;
 
 JobsCommand::JobsCommand(JobsRegistry &registry)
-    : BuiltinCommand("jobs", "jobs is a shell builtin"), m_registry(registry)
+    : BuiltinCommand("jobs"), m_registry(registry)
 {
 }
 
