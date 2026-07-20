@@ -2,6 +2,7 @@
 #include "commands/executor.h"
 #include "commands/external/command.h"
 #include "registries/complete.h"
+#include "registries/history.h"
 
 class Shell
 {
@@ -13,6 +14,7 @@ class Shell
     std::string m_current_input;
     std::string m_last_prompt;
 
+    HistoryRegistry *m_history_registry;
     BuiltinRegistry m_registry;
     Output m_output;
 
@@ -27,7 +29,7 @@ class Shell
 
     // BEGIN Autocomplete
     [[nodiscard]] std::vector<std::string>
-    CollectAutocompletes(const std::string &partial, Ast::Node* nodes);
+    CollectAutocompletes(const std::string &partial, Ast::Node *nodes);
 
     static std::vector<std::string>
     CollectAutocompleteInPath(const std::string &partial);

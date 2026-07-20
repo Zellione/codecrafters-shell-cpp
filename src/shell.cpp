@@ -33,7 +33,8 @@ Shell::Shell()
     : m_external_comm(&m_output),
       m_complete_registry(new CompleteRegistry(m_executor)),
       m_line_ready(false), m_exit_shell(false), m_main_process(true),
-      m_executor(m_output, m_registry, m_external_comm)
+      m_executor(m_output, m_registry, m_external_comm),
+      m_history_registry(new HistoryRegistry())
 {
     m_output.AddType(new RedirectStdOut());
     m_output.AddType(new RedirectStdErr());
@@ -45,13 +46,16 @@ Shell::Shell()
     m_registry.RegisterCommand(new TypeCommand(&m_registry));
     m_registry.RegisterCommand(new JobsCommand(m_executor.GetBGJobsRegistry()));
     m_registry.RegisterCommand(new CompleteCommand(m_complete_registry));
-    m_registry.RegisterCommand(new HistoryCommand());
+    m_registry.RegisterCommand(new HistoryCommand(m_history_registry));
 }
 
 Shell::~Shell()
 {
     delete m_complete_registry;
     m_complete_registry = nullptr;
+
+    delete m_history_registry;
+    m_history_registry = nullptr;
 }
 
 void Shell::run()
@@ -78,7 +82,6 @@ void Shell::run()
             ReapBackgroundJobs();
         }
 
-        // TODO: Add delete logic to node (current we have a memory leak)
         Lexer lexer(m_current_input);
         Parser parser(lexer);
         Ast::Node *node = nullptr;
@@ -114,7 +117,8 @@ int Shell::TabAutoComplete(int count, int key)
     Parser parser(lexer);
     Node *command_line = parser.Parse();
 
-    shell.m_autocomplete = shell.CollectAutocompletes(rl_line_buffer, command_line);
+    shell.m_autocomplete =
+        shell.CollectAutocompletes(rl_line_buffer, command_line);
     shell.m_last_prompt = rl_line_buffer;
 
     if (shell.m_autocomplete.empty())
@@ -196,7 +200,7 @@ int Shell::TabAutoCompleteMulti(int count, int key)
 }
 
 vector<string> Shell::CollectAutocompletes(const std::string &partial,
-                                           Node* nodes)
+                                           Node *nodes)
 {
     vector<string> autocompletes;
 
@@ -353,6 +357,7 @@ void Shell::LineHandler(char *line)
     if (line != nullptr)
     {
         shell.m_current_input = line;
+        shell.m_history_registry->Add(line);
         free(line);
     }
 
