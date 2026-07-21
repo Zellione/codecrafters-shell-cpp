@@ -109,7 +109,8 @@ int Executor::ExecPipeline(Node *pipeline, const vector<char *> &env_vars,
          it != current_pipeline->Commands.end(); it++)
     {
         const std::string &command = current_pipeline->Commands[0].Args[0];
-        if (command == "exit" || command == "jobs" || command == "complete")
+        if (command == "exit" || command == "jobs" || command == "complete" ||
+            command == "history")
         {
             return ExecCommand(*it, env_vars);
         }
