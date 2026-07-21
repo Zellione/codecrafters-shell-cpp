@@ -11,6 +11,8 @@ int main()
 
     // Register readline keys
     rl_bind_key('\t', Shell::TabAutoComplete);
+    rl_bind_keyseq("\e[A", Shell::UpArrow);
+    rl_bind_keyseq("\e[B", Shell::DownArrow);
 
     Shell &shell = Shell::Instance();
 

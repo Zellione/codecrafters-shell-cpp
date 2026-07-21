@@ -366,3 +366,25 @@ void Shell::LineHandler(char *line)
 }
 
 void Shell::ExitShell(bool exit) { m_exit_shell = exit; }
+
+int Shell::UpArrow(int count, int key)
+{
+    Shell &shell = Instance();
+
+    shell.m_current_input = shell.m_history_registry->Up();
+    rl_replace_line(shell.m_current_input.c_str(), 0);
+    rl_point = rl_end;
+
+    return 0;
+}
+
+int Shell::DownArrow(int count, int key)
+{
+    Shell &shell = Instance();
+
+    shell.m_current_input = shell.m_history_registry->Down();
+    rl_replace_line(shell.m_current_input.c_str(), 0);
+    rl_point = rl_end;
+
+    return 0;
+}

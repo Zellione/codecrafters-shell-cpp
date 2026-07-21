@@ -63,6 +63,9 @@ class Shell
     static int TabAutoComplete(int count, int key);
     static int TabAutoCompleteMulti(int count, int key);
 
+    static int UpArrow(int count, int key);
+    static int DownArrow(int count, int key);
+
     static void LineHandler(char *line);
 
     void ExitShell(bool exit);
