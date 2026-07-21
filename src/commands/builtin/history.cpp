@@ -16,13 +16,26 @@ int HistoryCommand::Process(const Command &comm) const
 {
     size_t limit = 0;
     std::string history_file;
+    bool read = false;
+    bool write = false;
 
     if (comm.Args.size() > 1)
     {
         for (size_t i = 1; i < comm.Args.size(); i++)
         {
-            if (comm.Args[i] == "-r" && i + 1 < comm.Args.size())
+            if ((comm.Args[i] == "-r" || comm.Args[i] == "-w") &&
+                i + 1 < comm.Args.size())
             {
+                if (comm.Args[i] == "-r")
+                {
+                    read = true;
+                }
+
+                if (comm.Args[i] == "-w")
+                {
+                    write = true;
+                }
+
                 history_file = comm.Args[++i];
                 continue;
             }
@@ -32,14 +45,22 @@ int HistoryCommand::Process(const Command &comm) const
 
             if (iss >> limit && !(iss >> remain))
             {
-                limit = std::stoull(comm.Args[1]);
+                limit = std::stoull(comm.Args[i]);
             }
         }
     }
 
     if (!history_file.empty())
     {
-        AppendFileToHistory(history_file);
+        if (read)
+        {
+            AppendFileToHistory(history_file);
+        }
+
+        if (write)
+        {
+            AppendHistoryToFile(history_file);
+        }
 
         return 0;
     }
@@ -65,5 +86,20 @@ void HistoryCommand::AppendFileToHistory(const std::string &filename) const
             m_registry->Add(line);
         }
         history_input.close();
+    }
+}
+
+void HistoryCommand::AppendHistoryToFile(const std::string &filename) const
+{
+    std::ofstream history_output(filename, std::ios::app);
+    if (history_output.is_open())
+    {
+        for (const auto &entry : m_registry->Get())
+        {
+            history_output << entry << '\n';
+        }
+
+        history_output.flush();
+        history_output.close();
     }
 }
