@@ -8,6 +8,7 @@ class HistoryRegistry
   private:
     std::vector<std::string> m_history;
     size_t m_current_pos;
+    size_t m_next_exported_pos;
 
   public:
     HistoryRegistry();
@@ -17,4 +18,7 @@ class HistoryRegistry
 
     [[nodiscard]] std::string Up();
     [[nodiscard]] std::string Down();
+
+    void MarkCurrentExportedPos();
+    [[nodiscard]] std::vector<std::string> GetNotExportedSubset();
 };

@@ -18,12 +18,14 @@ int HistoryCommand::Process(const Command &comm) const
     std::string history_file;
     bool read = false;
     bool write = false;
+    bool append = false;
 
     if (comm.Args.size() > 1)
     {
         for (size_t i = 1; i < comm.Args.size(); i++)
         {
-            if ((comm.Args[i] == "-r" || comm.Args[i] == "-w") &&
+            if ((comm.Args[i] == "-r" || comm.Args[i] == "-w" ||
+                 comm.Args[i] == "-a") &&
                 i + 1 < comm.Args.size())
             {
                 if (comm.Args[i] == "-r")
@@ -34,6 +36,11 @@ int HistoryCommand::Process(const Command &comm) const
                 if (comm.Args[i] == "-w")
                 {
                     write = true;
+                }
+
+                if (comm.Args[i] == "-a")
+                {
+                    append = true;
                 }
 
                 history_file = comm.Args[++i];
@@ -59,7 +66,13 @@ int HistoryCommand::Process(const Command &comm) const
 
         if (write)
         {
-            AppendHistoryToFile(history_file);
+            AppendHistoryToFile(history_file, false);
+        }
+
+        if (append)
+        {
+            AppendHistoryToFile(history_file, true);
+            m_registry->MarkCurrentExportedPos();
         }
 
         return 0;
@@ -89,12 +102,19 @@ void HistoryCommand::AppendFileToHistory(const std::string &filename) const
     }
 }
 
-void HistoryCommand::AppendHistoryToFile(const std::string &filename) const
+void HistoryCommand::AppendHistoryToFile(const std::string &filename,
+                                         bool append) const
 {
-    std::ofstream history_output(filename, std::ios::app);
+    std::ios::openmode mode = std::ios::out | std::ios::trunc;
+    if (append)
+    {
+        mode = std::ios::app;
+    }
+    std::ofstream history_output(filename, mode);
     if (history_output.is_open())
     {
-        for (const auto &entry : m_registry->Get())
+        for (const auto &entry :
+             append ? m_registry->GetNotExportedSubset() : m_registry->Get())
         {
             history_output << entry << '\n';
         }

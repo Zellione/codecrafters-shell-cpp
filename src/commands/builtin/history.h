@@ -11,7 +11,7 @@ class HistoryCommand : public BuiltinCommand
     [[nodiscard]] int Process(const Ast::Command &comm) const override;
 
     void AppendFileToHistory(const std::string &filename) const;
-    void AppendHistoryToFile(const std::string &filename) const;
+    void AppendHistoryToFile(const std::string &filename, bool append) const;
 
   public:
     HistoryCommand(HistoryRegistry *registry);
