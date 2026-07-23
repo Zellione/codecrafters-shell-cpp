@@ -52,3 +52,17 @@ void BuiltinRegistry::RegisterCommand(BuiltinCommand *command)
 {
     m_commands.push_back(command);
 }
+
+BuiltinCommand *BuiltinRegistry::GetCommandByName(const std::string &name)
+{
+    auto result = std::ranges::find_if(m_commands.begin(), m_commands.end(),
+                                       [&name](const BuiltinCommand *command) {
+                                           return command->GetName() == name;
+                                       });
+    if (result != m_commands.end())
+    {
+        return *result;
+    }
+
+    return nullptr;
+}

@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <iostream>
 
 #include "readline/readline.h"
@@ -15,6 +16,12 @@ int main()
     rl_bind_keyseq("\e[B", Shell::DownArrow);
 
     Shell &shell = Shell::Instance();
+
+    const char *histfile = std::getenv("HISTFILE");
+    if (histfile != nullptr)
+    {
+        shell.SetHistoryFile(histfile);
+    }
 
     shell.run();
 

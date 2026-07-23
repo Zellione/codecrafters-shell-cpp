@@ -69,4 +69,6 @@ class Shell
     static void LineHandler(char *line);
 
     void ExitShell(bool exit);
+
+    void SetHistoryFile(const std::string &histfile);
 };

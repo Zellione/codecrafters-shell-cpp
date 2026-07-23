@@ -123,3 +123,10 @@ void HistoryCommand::AppendHistoryToFile(const std::string &filename,
         history_output.close();
     }
 }
+
+void HistoryCommand::SetHistoryFile(const std::string &histfile)
+{
+    m_histfile = histfile;
+
+    AppendFileToHistory(m_histfile);
+}

@@ -21,4 +21,6 @@ class BuiltinRegistry
     AutoComplete(const std::string &partial) const;
 
     void RegisterCommand(BuiltinCommand *command);
+
+    BuiltinCommand *GetCommandByName(const std::string &name);
 };

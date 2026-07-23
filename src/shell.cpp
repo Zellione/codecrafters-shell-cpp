@@ -388,3 +388,21 @@ int Shell::DownArrow(int count, int key)
 
     return 0;
 }
+
+void Shell::SetHistoryFile(const std::string &histfile)
+{
+    BuiltinCommand *comm = m_registry.GetCommandByName("history");
+    if (comm == nullptr)
+    {
+        return;
+    }
+
+    auto *hist_comm = dynamic_cast<HistoryCommand *>(comm);
+
+    if (hist_comm == nullptr)
+    {
+        return;
+    }
+
+    hist_comm->SetHistoryFile(histfile);
+}
