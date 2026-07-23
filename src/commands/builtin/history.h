@@ -19,4 +19,5 @@ class HistoryCommand : public BuiltinCommand
     HistoryCommand(HistoryRegistry *registry);
 
     void SetHistoryFile(const std::string &histfile);
+    void WriteHistoryOnExit();
 };

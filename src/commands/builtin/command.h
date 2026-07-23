@@ -13,6 +13,7 @@ class BuiltinCommand
 
   public:
     BuiltinCommand(std::string name);
+    virtual ~BuiltinCommand() = default;
 
     [[nodiscard]] virtual bool IsCommand(const std::string &command) const;
     [[nodiscard]] virtual bool NameStartWith(const std::string &partial) const;

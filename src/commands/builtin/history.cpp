@@ -130,3 +130,11 @@ void HistoryCommand::SetHistoryFile(const std::string &histfile)
 
     AppendFileToHistory(m_histfile);
 }
+
+void HistoryCommand::WriteHistoryOnExit()
+{
+    if (!m_histfile.empty())
+    {
+        AppendHistoryToFile(m_histfile, false);
+    }
+}

@@ -28,8 +28,8 @@ Node *Parser::ParseSequence()
     {
         Ast::TokenType op = m_current_token.type;
         Eat(op);
-        Node *Right = ParsePipeline();
-        left = new Node(new Ast::Node::NodeClass(new Sequence(left, op, Right)),
+        Node *right = ParsePipeline();
+        left = new Node(new Ast::Node::NodeClass(new Sequence(left, op, right)),
                         Ast::NodeType::SEQUENCE);
     }
 

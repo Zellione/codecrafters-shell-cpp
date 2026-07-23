@@ -101,6 +101,11 @@ void Shell::run()
     }
 
     rl_callback_handler_remove();
+    BuiltinCommand *comm = m_registry.GetCommandByName("history");
+    if (comm != nullptr)
+    {
+        ((HistoryCommand *)comm)->WriteHistoryOnExit();
+    }
 }
 
 int Shell::TabAutoComplete(int count, int key)

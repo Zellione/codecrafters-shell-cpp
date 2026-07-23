@@ -78,7 +78,7 @@ inline const Command &get_last_command(Node *nodes)
     Pipeline *last_pipeline;
     while (current_node != nullptr)
     {
-        Node *tmp;
+        Node *tmp = nullptr;
         switch (current_node->Type)
         {
         case NodeType::SEQUENCE: {

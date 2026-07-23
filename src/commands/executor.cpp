@@ -304,7 +304,7 @@ int Executor::ExecCommand(const Command &comm, const vector<char *> &env_vars)
         return builtin_comm->Execute(comm);
     }
 
-    int status = m_external_comm.Exec(comm, env_vars);
+    int status = ExternalCommand::Exec(comm, env_vars);
 
     if (status != 0)
     {
