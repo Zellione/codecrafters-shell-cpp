@@ -1,5 +1,6 @@
 #include "shell.h"
 #include "commands/builtin/complete.h"
+#include "commands/builtin/declare.h"
 #include "commands/builtin/echo.h"
 #include "commands/builtin/exit.h"
 #include "commands/builtin/history.h"
@@ -47,6 +48,7 @@ Shell::Shell()
     m_registry.RegisterCommand(new JobsCommand(m_executor.GetBGJobsRegistry()));
     m_registry.RegisterCommand(new CompleteCommand(m_complete_registry));
     m_registry.RegisterCommand(new HistoryCommand(m_history_registry));
+    m_registry.RegisterCommand(new DeclareCommand());
 }
 
 Shell::~Shell()
