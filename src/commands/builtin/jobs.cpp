@@ -11,7 +11,7 @@ JobsCommand::JobsCommand(JobsRegistry &registry)
 {
 }
 
-int JobsCommand::Process(const Command &comm) const
+int JobsCommand::Process(const Command &comm)
 {
     std::map<unsigned int, BackgroundJob> jobs = m_registry.GetAll();
 

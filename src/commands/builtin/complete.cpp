@@ -4,7 +4,7 @@
 
 using Ast::Command;
 
-int CompleteCommand::Process(const Ast::Command &comm) const
+int CompleteCommand::Process(const Ast::Command &comm)
 {
     std::string name;
     std::string completion;
@@ -91,7 +91,6 @@ void CompleteCommand::Create(const std::string &name,
 }
 
 CompleteCommand::CompleteCommand(CompleteRegistry *completeRegistry)
-    : BuiltinCommand("complete"),
-      m_completeRegistry(completeRegistry)
+    : BuiltinCommand("complete"), m_completeRegistry(completeRegistry)
 {
 }

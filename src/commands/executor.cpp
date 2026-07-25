@@ -298,7 +298,7 @@ int Executor::ExecPipeline(Node *pipeline, const vector<char *> &env_vars,
 
 int Executor::ExecCommand(const Command &comm, const vector<char *> &env_vars)
 {
-    const BuiltinCommand *builtin_comm = m_builtin_registry.FindCommand(comm);
+    BuiltinCommand *builtin_comm = m_builtin_registry.FindCommand(comm);
     if (builtin_comm != nullptr)
     {
         return builtin_comm->Execute(comm);

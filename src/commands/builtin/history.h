@@ -10,7 +10,7 @@ class HistoryCommand : public BuiltinCommand
 
     std::string m_histfile;
 
-    [[nodiscard]] int Process(const Ast::Command &comm) const override;
+    [[nodiscard]] int Process(const Ast::Command &comm) override;
 
     void AppendFileToHistory(const std::string &filename) const;
     void AppendHistoryToFile(const std::string &filename, bool append) const;

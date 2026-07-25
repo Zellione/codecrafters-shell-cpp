@@ -8,7 +8,7 @@ class JobsCommand : public BuiltinCommand
   private:
     JobsRegistry &m_registry;
 
-    [[nodiscard]] int Process(const Ast::Command &comm) const override;
+    [[nodiscard]] int Process(const Ast::Command &comm) override;
 
   public:
     JobsCommand(JobsRegistry &registry);

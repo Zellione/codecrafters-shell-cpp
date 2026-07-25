@@ -14,7 +14,7 @@ class BuiltinRegistry
     [[nodiscard]] const BuiltinCommand *
     FindCommand(const Ast::Command &comm) const;
 
-    [[nodiscard]] const BuiltinCommand *
+    [[nodiscard]] BuiltinCommand *
     FindCommandInArguments(const Ast::Command &comm, size_t pos) const;
 
     [[nodiscard]] std::vector<std::string>

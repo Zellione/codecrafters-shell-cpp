@@ -1,9 +1,13 @@
 #include "command.h"
 
-class DeclareCommand : public BuiltinCommand 
+#include <map>
+
+class DeclareCommand : public BuiltinCommand
 {
   private:
-    [[nodiscard]] int Process(const Ast::Command &comm) const override;
+    std::map<std::string, std::string> m_variables;
+
+    [[nodiscard]] int Process(const Ast::Command &comm) override;
 
   public:
     DeclareCommand();

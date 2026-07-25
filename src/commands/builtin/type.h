@@ -6,7 +6,7 @@
 class TypeCommand : public BuiltinCommand
 {
   private:
-    [[nodiscard]] int Process(const Ast::Command &comm) const override;
+    [[nodiscard]] int Process(const Ast::Command &comm) override;
 
     const BuiltinRegistry *m_registry;
 

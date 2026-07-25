@@ -9,7 +9,7 @@ class BuiltinCommand
   private:
     std::string m_name;
 
-    [[nodiscard]] virtual int Process(const Ast::Command &command) const;
+    [[nodiscard]] virtual int Process(const Ast::Command &command);
 
   public:
     BuiltinCommand(std::string name);
@@ -20,5 +20,5 @@ class BuiltinCommand
 
     [[nodiscard]] const std::string &GetName() const;
 
-    [[nodiscard]] virtual int Execute(const Ast::Command &command) const;
+    [[nodiscard]] virtual int Execute(const Ast::Command &command);
 };

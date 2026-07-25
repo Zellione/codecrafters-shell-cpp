@@ -18,12 +18,12 @@ const BuiltinCommand *BuiltinRegistry::FindCommand(const Command &comm) const
     return FindCommandInArguments(comm, 0);
 }
 
-const BuiltinCommand *
-BuiltinRegistry::FindCommandInArguments(const Command &comm, size_t pos) const
+BuiltinCommand *BuiltinRegistry::FindCommandInArguments(const Command &comm,
+                                                        size_t pos) const
 {
     string command = !comm.Args.empty() ? comm.Args[pos] : "";
 
-    for (auto *const builtin_com : m_commands)
+    for (auto *builtin_com : m_commands)
     {
         if (builtin_com->IsCommand(command))
         {

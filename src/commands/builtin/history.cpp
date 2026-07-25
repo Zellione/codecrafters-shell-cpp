@@ -12,7 +12,7 @@ HistoryCommand::HistoryCommand(HistoryRegistry *registry)
 {
 }
 
-int HistoryCommand::Process(const Command &comm) const
+int HistoryCommand::Process(const Command &comm)
 {
     size_t limit = 0;
     std::string history_file;

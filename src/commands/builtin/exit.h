@@ -5,7 +5,7 @@
 class ExitCommand : public BuiltinCommand
 {
   private:
-    [[nodiscard]] int Process(const Ast::Command &comm) const override;
+    [[nodiscard]] int Process(const Ast::Command &comm) override;
 
   public:
     ExitCommand();

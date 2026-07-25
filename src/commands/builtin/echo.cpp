@@ -3,11 +3,9 @@
 
 using Ast::Command;
 
-EchoCommand::EchoCommand() : BuiltinCommand("echo")
-{
-}
+EchoCommand::EchoCommand() : BuiltinCommand("echo") {}
 
-int EchoCommand::Process(const Command &comm) const
+int EchoCommand::Process(const Command &comm)
 {
     bool trailing_newline = true;
 

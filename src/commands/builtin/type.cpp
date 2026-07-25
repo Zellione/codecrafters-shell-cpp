@@ -4,14 +4,14 @@
 
 using Ast::Command;
 
-TypeCommand::TypeCommand(const BuiltinRegistry *registry)
+TypeCommand::TypeCommand(BuiltinRegistry *registry)
     : BuiltinCommand("type"), m_registry(registry)
 {
 }
 
-int TypeCommand::Process(const Command &comm) const
+int TypeCommand::Process(const Command &comm)
 {
-    const BuiltinCommand *command = m_registry->FindCommandInArguments(comm, 1);
+    BuiltinCommand *command = m_registry->FindCommandInArguments(comm, 1);
 
     if (command != nullptr)
     {

@@ -8,7 +8,7 @@ class CompleteCommand : public BuiltinCommand
   private:
     CompleteRegistry *m_completeRegistry;
 
-    [[nodiscard]] int Process(const Ast::Command &comm) const override;
+    [[nodiscard]] int Process(const Ast::Command &comm) override;
 
     void Print(const Ast::Command &comm, const std::string &name) const;
     void Create(const std::string &name, const std::string &completion) const;

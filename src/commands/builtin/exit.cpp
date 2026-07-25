@@ -4,11 +4,9 @@
 
 using Ast::Command;
 
-ExitCommand::ExitCommand() : BuiltinCommand("exit")
-{
-}
+ExitCommand::ExitCommand() : BuiltinCommand("exit") {}
 
-int ExitCommand::Process(const Command &comm) const
+int ExitCommand::Process(const Command &comm)
 {
     Shell &shell = Shell::Instance();
     shell.ExitShell(true);
