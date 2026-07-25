@@ -25,6 +25,14 @@ int DeclareCommand::Process(const Command &comm)
                 std::string key = std::string(variable_split[0]);
                 std::string value = std::string(variable_split[1]);
 
+                if (!IsValidVariableName(key))
+                {
+                    std::cout << std::format(
+                        "declare: `{}': not a valid identifier\n",
+                        comm.Args[i]);
+                    return 1;
+                }
+
                 if (m_variables.contains(key))
                 {
                     m_variables.erase(key);
@@ -59,5 +67,27 @@ int DeclareCommand::Process(const Command &comm)
 
     std::cout << std::format("declare: {}: not found\n", variable_name);
 
-    return 0;
+    return 1;
+}
+
+bool DeclareCommand::IsValidVariableName(const std::string &name)
+{
+    for (int i = 0; i < name.length(); i++)
+    {
+        if ((name[i] >= 'A' && name[i] <= 'Z') ||
+            (name[i] >= 'a' && name[i] <= 'z') || name[i] == '_' ||
+            (name[i] >= '0' && name[i] <= '9'))
+        {
+            if (i == 0 && (name[i] >= '0' && name[i] <= '9'))
+            {
+                return false;
+            }
+
+            continue;
+        }
+
+        return false;
+    }
+
+    return true;
 }

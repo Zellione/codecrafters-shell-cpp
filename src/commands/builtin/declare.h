@@ -9,6 +9,8 @@ class DeclareCommand : public BuiltinCommand
 
     [[nodiscard]] int Process(const Ast::Command &comm) override;
 
+    static bool IsValidVariableName(const std::string &name);
+
   public:
     DeclareCommand();
 };
