@@ -13,7 +13,7 @@ BuiltinRegistry::~BuiltinRegistry()
     }
 }
 
-const BuiltinCommand *BuiltinRegistry::FindCommand(const Command &comm) const
+BuiltinCommand *BuiltinRegistry::FindCommand(const Command &comm) const
 {
     return FindCommandInArguments(comm, 0);
 }

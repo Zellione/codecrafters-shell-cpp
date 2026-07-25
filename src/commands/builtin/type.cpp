@@ -4,7 +4,7 @@
 
 using Ast::Command;
 
-TypeCommand::TypeCommand(BuiltinRegistry *registry)
+TypeCommand::TypeCommand(const BuiltinRegistry *registry)
     : BuiltinCommand("type"), m_registry(registry)
 {
 }

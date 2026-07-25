@@ -11,8 +11,7 @@ class BuiltinRegistry
     BuiltinRegistry() = default;
     ~BuiltinRegistry();
 
-    [[nodiscard]] const BuiltinCommand *
-    FindCommand(const Ast::Command &comm) const;
+    [[nodiscard]] BuiltinCommand *FindCommand(const Ast::Command &comm) const;
 
     [[nodiscard]] BuiltinCommand *
     FindCommandInArguments(const Ast::Command &comm, size_t pos) const;

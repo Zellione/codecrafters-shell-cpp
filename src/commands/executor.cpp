@@ -4,6 +4,7 @@
 
 #include <fcntl.h>
 #include <poll.h>
+#include <ranges>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -108,9 +109,11 @@ int Executor::ExecPipeline(Node *pipeline, const vector<char *> &env_vars,
     for (auto it = current_pipeline->Commands.begin();
          it != current_pipeline->Commands.end(); it++)
     {
+
+        static std::array<std::string, 5> direct_exec{"exit", "history", "jobs",
+                                                      "complete", "declare"};
         const std::string &command = current_pipeline->Commands[0].Args[0];
-        if (command == "exit" || command == "jobs" || command == "complete" ||
-            command == "history")
+        if (std::ranges::find(direct_exec, command) != direct_exec.end())
         {
             return ExecCommand(*it, env_vars);
         }

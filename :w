@@ -20,17 +20,10 @@ int DeclareCommand::Process(const Command &comm)
                      [](auto &&sub) { return std::string_view(sub); })) |
                 std::ranges::to<std::vector>();
 
-            if (variable_split.size() == 2)
+            if (variable_split.size() > 2)
             {
-                std::string key = std::string(variable_split[0]);
-                std::string value = std::string(variable_split[1]);
-
-                if (m_variables.contains(key))
-                {
-                    m_variables.erase(key);
-                }
-
-                m_variables.emplace(key, value);
+                m_variables.emplace(std::string(variable_split[0]),
+                                    std::string(variable_split[1]));
             }
 
             return 0;
@@ -44,17 +37,11 @@ int DeclareCommand::Process(const Command &comm)
         }
     }
 
-    auto find_var = m_variables.find(variable_name);
-    if (find_var != m_variables.end())
+    std::string variable_value = m_variables.find(variable_name)->second;
+    if (!variable_name.empty() && !variable_value.empty())
     {
-        std::string variable_value = find_var->second;
-        if (!variable_name.empty() && !variable_value.empty())
-        {
-            std::cout << std::format("declare -- {}=\"{}\"\n", variable_name,
-                                     variable_value);
-        }
-
-        return 0;
+        std::cout << std::format("declare -- {}={}", variable_name,
+                                 variable_value);
     }
 
     std::cout << std::format("declare: {}: not found\n", variable_name);
