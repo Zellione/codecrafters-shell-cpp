@@ -1,4 +1,5 @@
 #include "echo.h"
+#include "../../shell.h"
 #include <sstream>
 
 using Ast::Command;

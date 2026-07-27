@@ -3,6 +3,7 @@
 #include "commands/external/command.h"
 #include "registries/complete.h"
 #include "registries/history.h"
+#include "registries/variables.h"
 
 class Shell
 {
@@ -16,6 +17,7 @@ class Shell
 
     HistoryRegistry *m_history_registry;
     BuiltinRegistry m_registry;
+    VariableRegistry m_variable_registry;
     Output m_output;
 
     std::vector<std::string> m_autocomplete;

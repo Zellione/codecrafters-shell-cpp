@@ -5,7 +5,10 @@
 
 using Ast::Command;
 
-DeclareCommand::DeclareCommand() : BuiltinCommand("declare") {}
+DeclareCommand::DeclareCommand(VariableRegistry &registry)
+    : BuiltinCommand("declare"), m_variables(registry)
+{
+}
 
 int DeclareCommand::Process(const Command &comm)
 {
@@ -33,12 +36,7 @@ int DeclareCommand::Process(const Command &comm)
                     return 1;
                 }
 
-                if (m_variables.contains(key))
-                {
-                    m_variables.erase(key);
-                }
-
-                m_variables.emplace(key, value);
+                m_variables.AddVariable(key, value);
             }
 
             return 0;
@@ -52,16 +50,11 @@ int DeclareCommand::Process(const Command &comm)
         }
     }
 
-    auto find_var = m_variables.find(variable_name);
-    if (find_var != m_variables.end())
+    std::string variable_value = m_variables.GetVariable(variable_name);
+    if (!variable_name.empty() && !variable_value.empty())
     {
-        std::string variable_value = find_var->second;
-        if (!variable_name.empty() && !variable_value.empty())
-        {
-            std::cout << std::format("declare -- {}=\"{}\"\n", variable_name,
-                                     variable_value);
-        }
-
+        std::cout << std::format("declare -- {}=\"{}\"\n", variable_name,
+                                 variable_value);
         return 0;
     }
 

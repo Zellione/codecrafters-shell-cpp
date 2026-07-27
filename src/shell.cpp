@@ -11,6 +11,7 @@
 #include "output/console_output.h"
 #include "output/redirect_stderr.h"
 #include "output/redirect_stdout.h"
+#include "parser/expander.h"
 #include "parser/lexer.h"
 #include "parser/parser.h"
 #include "readline/readline.h"
@@ -48,7 +49,7 @@ Shell::Shell()
     m_registry.RegisterCommand(new JobsCommand(m_executor.GetBGJobsRegistry()));
     m_registry.RegisterCommand(new CompleteCommand(m_complete_registry));
     m_registry.RegisterCommand(new HistoryCommand(m_history_registry));
-    m_registry.RegisterCommand(new DeclareCommand());
+    m_registry.RegisterCommand(new DeclareCommand(m_variable_registry));
 }
 
 Shell::~Shell()
@@ -91,6 +92,8 @@ void Shell::run()
         {
             node = parser.Parse();
         }
+        Expander expander(node, m_variable_registry);
+        expander.Expand();
 
         m_executor.Exec(node, {});
 
