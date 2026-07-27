@@ -40,22 +40,40 @@ void Expander::ReplaceVars(Ast::Command &comm)
         std::stringstream ss;
         std::string variable_name;
         size_t pos = 0;
+        bool braces = false;
         while (pos < part.length() && pos != std::string::npos)
         {
             if (part[pos] == '$' && pos + 1 < part.length())
             {
-                size_t end_pos = part.find(' ', pos + 1);
+                size_t end_pos;
+                if (part[pos + 1] == '{')
+                {
+                    braces = true;
+                    end_pos = part.find('}', pos + 2);
+                }
+                else
+                {
+                    end_pos = part.find(' ', pos + 1);
+                }
+
                 if (end_pos == std::string::npos)
                 {
                     variable_name = part.substr(pos + 1);
                 }
                 else
                 {
-                    variable_name = part.substr(pos + 1, end_pos);
+                    variable_name = part.substr(braces ? pos + 2 : pos + 1,
+                                                braces ? end_pos - 2 - pos
+                                                       : end_pos - 1 - pos);
                 }
 
                 ss << m_variables.GetVariable(variable_name);
                 variable_name.clear();
+                if (braces)
+                {
+                    end_pos++;
+                }
+                braces = false;
                 pos = end_pos;
             }
             else
