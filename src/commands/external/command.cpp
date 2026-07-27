@@ -158,6 +158,10 @@ void ExternalCommand::FillArgV(const Command &command, vector<char *> &out_argv)
     // Build argv
     for (const auto &arg : command.Args)
     {
+        if (arg.empty())
+        {
+            continue;
+        }
         out_argv.push_back(const_cast<char *>(arg.c_str()));
     }
     out_argv.push_back(nullptr);
