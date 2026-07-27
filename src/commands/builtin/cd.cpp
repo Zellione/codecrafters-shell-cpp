@@ -18,7 +18,16 @@ int CdCommand::Process(const Command &comm)
     }
 
     fs::path new_path(comm.Args[1]);
-    if (!fs::exists(new_path))
+    fs::path new_absolute_path;
+    try
+    {
+        new_absolute_path = fs::canonical(m_current_directory / new_path);
+    }
+    catch (const std::filesystem::filesystem_error &err)
+    {
+        new_absolute_path = new_path;
+    }
+    if (!fs::exists(new_path) && !fs::exists(new_absolute_path))
     {
         std::cerr << std::format("cd: {}: No such file or directory\n",
                                  comm.Args[1]);
