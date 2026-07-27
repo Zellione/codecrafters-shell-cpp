@@ -16,8 +16,9 @@ int CdCommand::Process(const Command &comm)
     {
         return 1;
     }
+    std::string path(comm.Args[1]);
 
-    fs::path new_path(comm.Args[1]);
+    fs::path new_path(path);
     fs::path new_absolute_path;
     try
     {
@@ -36,7 +37,7 @@ int CdCommand::Process(const Command &comm)
 
     if (new_path.is_absolute())
     {
-        m_current_directory = new_path;
+        m_current_directory = fs::canonical(new_path);
     }
     else
     {

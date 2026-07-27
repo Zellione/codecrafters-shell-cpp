@@ -9,6 +9,8 @@ class VariableRegistry
     std::map<std::string, std::string> m_variables;
 
   public:
+    VariableRegistry();
+
     void AddVariable(const std::string &key, const std::string &value);
     [[nodiscard]] std::string GetVariable(const std::string &key) const;
 };

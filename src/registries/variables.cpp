@@ -1,5 +1,10 @@
 #include "variables.h"
-#include <iostream>
+#include <stdexcept>
+
+VariableRegistry::VariableRegistry()
+{
+    m_variables.emplace("HOME", std::getenv("HOME"));
+}
 
 void VariableRegistry::AddVariable(const std::string &key,
                                    const std::string &value)

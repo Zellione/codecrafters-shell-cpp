@@ -43,6 +43,13 @@ void Expander::ReplaceVars(Ast::Command &comm)
         bool braces = false;
         while (pos < part.length() && pos != std::string::npos)
         {
+            if (part[pos] == '~')
+            {
+                ss << m_variables.GetVariable("HOME");
+                pos++;
+                continue;
+            }
+
             if (part[pos] == '$' && pos + 1 < part.length())
             {
                 size_t end_pos;
