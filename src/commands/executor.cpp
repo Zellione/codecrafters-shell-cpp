@@ -110,8 +110,8 @@ int Executor::ExecPipeline(Node *pipeline, const vector<char *> &env_vars,
          it != current_pipeline->Commands.end(); it++)
     {
 
-        static std::array<std::string, 5> direct_exec{"exit", "history", "jobs",
-                                                      "complete", "declare"};
+        static std::array<std::string, 6> direct_exec{
+            "exit", "history", "jobs", "complete", "declare", "cd"};
         const std::string &command = current_pipeline->Commands[0].Args[0];
         if (std::ranges::find(direct_exec, command) != direct_exec.end())
         {

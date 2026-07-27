@@ -1,4 +1,5 @@
 #include "shell.h"
+#include "commands/builtin/cd.h"
 #include "commands/builtin/complete.h"
 #include "commands/builtin/declare.h"
 #include "commands/builtin/echo.h"
@@ -37,7 +38,8 @@ Shell::Shell()
       m_complete_registry(new CompleteRegistry(m_executor)),
       m_line_ready(false), m_exit_shell(false), m_main_process(true),
       m_executor(m_output, m_registry, m_external_comm),
-      m_history_registry(new HistoryRegistry())
+      m_history_registry(new HistoryRegistry()),
+      m_current_directory(std::filesystem::current_path())
 {
     m_output.AddType(new RedirectStdOut());
     m_output.AddType(new RedirectStdErr());
@@ -51,7 +53,8 @@ Shell::Shell()
     m_registry.RegisterCommand(new CompleteCommand(m_complete_registry));
     m_registry.RegisterCommand(new HistoryCommand(m_history_registry));
     m_registry.RegisterCommand(new DeclareCommand(m_variable_registry));
-    m_registry.RegisterCommand(new PwdCommand());
+    m_registry.RegisterCommand(new PwdCommand(m_current_directory));
+    m_registry.RegisterCommand(new CdCommand(m_current_directory));
 }
 
 Shell::~Shell()

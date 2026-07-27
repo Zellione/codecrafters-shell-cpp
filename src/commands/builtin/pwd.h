@@ -5,8 +5,10 @@
 class PwdCommand : public BuiltinCommand
 {
   private:
+    const std::string &m_current_directory;
+
     [[nodiscard]] int Process(const Ast::Command &comm) override;
 
   public:
-    PwdCommand();
+    PwdCommand(const std::string &current_directory);
 };

@@ -15,6 +15,8 @@ class Shell
     std::string m_current_input;
     std::string m_last_prompt;
 
+    std::string m_current_directory;
+
     HistoryRegistry *m_history_registry;
     BuiltinRegistry m_registry;
     VariableRegistry m_variable_registry;
