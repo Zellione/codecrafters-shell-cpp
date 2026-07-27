@@ -5,6 +5,7 @@
 #include "commands/builtin/exit.h"
 #include "commands/builtin/history.h"
 #include "commands/builtin/jobs.h"
+#include "commands/builtin/pwd.h"
 #include "commands/builtin/type.h"
 #include "helper/filesystem.h"
 #include "output/console_error.h"
@@ -50,6 +51,7 @@ Shell::Shell()
     m_registry.RegisterCommand(new CompleteCommand(m_complete_registry));
     m_registry.RegisterCommand(new HistoryCommand(m_history_registry));
     m_registry.RegisterCommand(new DeclareCommand(m_variable_registry));
+    m_registry.RegisterCommand(new PwdCommand());
 }
 
 Shell::~Shell()

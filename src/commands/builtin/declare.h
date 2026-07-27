@@ -1,3 +1,5 @@
+#pragma once
+
 #include "../../registries/variables.h"
 #include "command.h"
 

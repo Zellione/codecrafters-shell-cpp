@@ -30,7 +30,7 @@ int DeclareCommand::Process(const Command &comm)
 
                 if (!IsValidVariableName(key))
                 {
-                    std::cout << std::format(
+                    std::cerr << std::format(
                         "declare: `{}': not a valid identifier\n",
                         comm.Args[i]);
                     return 1;
@@ -58,7 +58,7 @@ int DeclareCommand::Process(const Command &comm)
         return 0;
     }
 
-    std::cout << std::format("declare: {}: not found\n", variable_name);
+    std::cerr << std::format("declare: {}: not found\n", variable_name);
 
     return 1;
 }
